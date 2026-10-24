@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "seed:demo": "node --env-file=.env.local scripts/seed-demo.mjs --reset",
+    "test:rls": "node --env-file=.env.local scripts/test-rls.mjs",
+    "reminders": "node --env-file=.env.local scripts/deadline-reminders.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

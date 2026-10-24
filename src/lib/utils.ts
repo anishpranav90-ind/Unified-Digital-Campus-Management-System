@@ -43,7 +43,7 @@ export function isSameDay(value: string | Date, reference = new Date()) {
 
 export function formatTime(value: string | null | undefined) {
   if (!value) return "—";
-  const [h, m] = value.split(":");
+  const [h, m] = value.slice(0, 5).split(":");
   const hours = Number(h);
   if (Number.isNaN(hours)) return value;
   const suffix = hours >= 12 ? "PM" : "AM";
@@ -100,11 +100,29 @@ export function safeExternalUrl(raw: string | null | undefined) {
 
 export function fileSizeLabel(bytes: number | null | undefined) {
   if (!bytes) return "—";
+  if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+export function firstName(fullName: string) {
+  return fullName
+    .replace(/^(dr|prof|mr|ms|mrs)\.?\s+/i, "")
+    .split(" ")[0];
 }
 
 export function pct(part: number, total: number) {
   if (!total) return 0;
   return Math.round((part / total) * 100);
+}
+
+/** Whole days left until a deadline, never negative. */
+export function daysUntil(value: string | Date) {
+  const date = typeof value === "string" ? parseISO(value) : value;
+  return Math.max(0, Math.ceil((date.getTime() - Date.now()) / 86400000));
+}
+
+export function isPast(value: string | Date) {
+  const date = typeof value === "string" ? parseISO(value) : value;
+  return date.getTime() < Date.now();
 }

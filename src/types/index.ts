@@ -101,6 +101,18 @@ export interface TimetableEntry {
   classroom?: Classroom | null;
 }
 
+export interface TimetableCorrection {
+  id: string;
+  entry_id: string;
+  requested_by: string;
+  reason: string;
+  status: "pending" | "resolved";
+  admin_note: string | null;
+  created_at: string;
+  entry?: TimetableEntry | null;
+  requester?: Pick<Profile, "id" | "full_name"> | null;
+}
+
 export interface ExamSchedule {
   id: string;
   subject_id: string;
@@ -227,6 +239,7 @@ export interface MaintenanceRequest {
   priority: "low" | "medium" | "high" | "urgent";
   status: MaintenanceStatus;
   assigned_to: string | null;
+  assignee?: Pick<Profile, "id" | "full_name" | "email"> | null;
   resolution_note: string | null;
   resolution_photo_path: string | null;
   created_at: string;
@@ -279,6 +292,7 @@ export interface AuditLog {
   entity: string;
   entity_id: string | null;
   details: Record<string, unknown> | null;
+  actor?: Pick<Profile, "id" | "full_name"> | null;
   created_at: string;
 }
 
