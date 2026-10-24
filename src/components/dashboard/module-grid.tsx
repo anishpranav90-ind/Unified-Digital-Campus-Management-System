@@ -7,7 +7,7 @@ const ACCENTS = [
   "bg-orange-50 text-brand-orange",
   "bg-blue-50 text-brand-blue",
   "bg-teal-50 text-brand-teal",
-  "bg-violet-50 text-violet-600",
+  "bg-amber-50 text-amber-600",
   "bg-emerald-50 text-emerald-600",
 ];
 

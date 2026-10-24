@@ -68,7 +68,7 @@ export function OpportunityForm() {
         <Input id="opp-tags" name="tags" placeholder="ai, team, prototype" />
       </Field>
 
-      <div className="rounded-lg bg-violet-50 px-3 py-2 text-[10px] leading-relaxed text-violet-800">
+      <div className="rounded-lg bg-slate-50 px-3 py-2 text-[10px] leading-relaxed text-slate-600">
         Publishing notifies students in-app. External links are validated server-side and must use http(s).
       </div>
 

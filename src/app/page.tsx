@@ -9,7 +9,6 @@ import {
   MessagesSquare,
   Printer,
   ShieldCheck,
-  Sparkles,
   Trophy,
   UsersRound,
   Wrench,
@@ -114,26 +113,22 @@ export default async function LandingPage() {
         </div>
       </header>
 
-      <section className="relative overflow-hidden bg-navy-950 text-white">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(249,115,22,0.18),transparent_55%),radial-gradient(ellipse_at_bottom_left,rgba(20,184,166,0.14),transparent_50%)]" />
-        <div className="relative mx-auto grid max-w-6xl gap-12 px-4 py-16 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:py-24">
-          <div className="animate-rise">
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-[11px] font-medium text-slate-200">
-              <Sparkles className="h-3.5 w-3.5 text-brand-orange" />
-              One secure platform for five campus services
-            </span>
-            <h1 className="mt-6 text-4xl font-bold leading-[1.08] tracking-tight sm:text-5xl lg:text-6xl">
-              One Campus.
-              <br />
-              <span className="text-brand-orange">Everything in Sync.</span>
+      <section className="border-b border-navy-800 bg-navy-950 text-white">
+        <div className="mx-auto grid max-w-6xl gap-12 px-4 py-16 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:py-24">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-300">
+              Campus operations platform
+            </p>
+            <h1 className="mt-5 max-w-2xl text-4xl font-bold leading-[1.08] tracking-tight sm:text-5xl lg:text-6xl">
+              Manage print jobs, schedules, mentoring, opportunities, and maintenance in one place.
             </h1>
             <p className="mt-5 max-w-xl text-sm leading-relaxed text-slate-300 sm:text-base">
-              UniSync replaces fragmented notices, manual queues and lost complaints with a single,
-              role-aware campus operating system — built on Next.js and Supabase.
+              UniSync gives students, faculty, and administrators one role-aware workspace for the
+              services they use across campus.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <ButtonLink href={profile ? "/dashboard" : "/register"} size="lg" variant="accent">
-                {profile ? "Go to dashboard" : "Start exploring UniSync"}
+                {profile ? "Go to dashboard" : "Create a student account"}
                 <ArrowRight className="h-4 w-4" />
               </ButtonLink>
               <ButtonLink
@@ -147,81 +142,38 @@ export default async function LandingPage() {
             </div>
             <div className="mt-10 flex flex-wrap gap-x-8 gap-y-3 text-xs text-slate-400">
               <span className="flex items-center gap-1.5">
-                <CheckCircle2 className="h-4 w-4 text-brand-teal" /> 5 connected modules
+                <CheckCircle2 className="h-4 w-4 text-brand-teal" /> Student, faculty, and administrator workflows
               </span>
               <span className="flex items-center gap-1.5">
-                <CheckCircle2 className="h-4 w-4 text-brand-teal" /> 3 role-specific dashboards
-              </span>
-              <span className="flex items-center gap-1.5">
-                <CheckCircle2 className="h-4 w-4 text-brand-teal" /> Row Level Security
+                <CheckCircle2 className="h-4 w-4 text-brand-teal" /> Database-enforced access controls
               </span>
             </div>
           </div>
 
-          <div className="relative animate-rise">
-            <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-3 shadow-2xl backdrop-blur">
-              <div className="rounded-2xl bg-white p-4 text-ink sm:p-5">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted">Good morning</p>
-                    <p className="text-lg font-semibold">Aarav Sharma</p>
-                  </div>
-                  <span className="rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-semibold text-emerald-700">
-                    Student · Sem 5
-                  </span>
-                </div>
-
-                <div className="mt-4 grid grid-cols-3 gap-2">
-                  {[
-                    { label: "Print queue", value: "#3", note: "~8 min" },
-                    { label: "Complaints", value: "2", note: "open" },
-                    { label: "Deadlines", value: "4", note: "this month" },
-                  ].map((stat) => (
-                    <div key={stat.label} className="rounded-xl border border-line bg-canvas p-2.5">
-                      <p className="text-[9px] font-medium uppercase text-muted">{stat.label}</p>
-                      <p className="mt-0.5 text-xl font-semibold">{stat.value}</p>
-                      <p className="text-[9px] text-muted">{stat.note}</p>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="mt-3 rounded-xl border border-line p-3">
-                  <div className="flex items-center justify-between text-[10px] font-semibold text-muted">
-                    <span>TODAY&apos;S TIMETABLE</span>
-                    <span className="text-brand-blue">View all</span>
-                  </div>
-                  <div className="mt-2 space-y-1.5">
-                    {[
-                      { time: "09:00", subject: "Database Management Systems", room: "C-101", color: "bg-blue-500" },
-                      { time: "10:15", subject: "Operating Systems", room: "C-101", color: "bg-teal-500" },
-                      { time: "11:30", subject: "Computer Networks", room: "C-102", color: "bg-orange-500" },
-                    ].map((item) => (
-                      <div key={item.time} className="flex items-center gap-2 rounded-lg bg-slate-50 px-2 py-1.5">
-                        <span className={`h-6 w-0.5 rounded-full ${item.color}`} />
-                        <span className="w-10 text-[9px] font-semibold text-muted">{item.time}</span>
-                        <span className="min-w-0 flex-1 truncate text-[10px] font-medium">{item.subject}</span>
-                        <span className="text-[9px] text-muted">{item.room}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="mt-3 grid grid-cols-2 gap-2">
-                  <div className="rounded-xl bg-navy-950 p-3 text-white">
-                    <Printer className="h-4 w-4 text-brand-orange" />
-                    <p className="mt-2 text-[10px] font-semibold">PP-1042 · Queued</p>
-                    <p className="text-[9px] text-slate-400">Position #3 · 12 pages</p>
-                  </div>
-                  <div className="rounded-xl bg-teal-50 p-3">
-                    <Wrench className="h-4 w-4 text-teal-600" />
-                    <p className="mt-2 text-[10px] font-semibold text-teal-900">FX-2081 · In progress</p>
-                    <p className="text-[9px] text-teal-700">Projector · C-102</p>
-                  </div>
-                </div>
+          <div className="relative">
+            <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-3">
+              <div className="rounded-2xl bg-white p-5 text-ink sm:p-6">
+                <h2 className="text-sm font-semibold text-ink">Campus services</h2>
+                <p className="mt-1 text-xs leading-relaxed text-muted">
+                  Each module supports a specific campus workflow.
+                </p>
+                <ul className="mt-5 divide-y divide-line">
+                  {MODULES.map((module) => {
+                    const Icon = ICONS[module.icon as keyof typeof ICONS];
+                    return (
+                      <li key={module.key} className="flex items-start gap-3 py-3 first:pt-0 last:pb-0">
+                        <span className="mt-0.5 rounded-lg bg-canvas p-2 text-brand-blue">
+                          <Icon aria-hidden="true" className="h-4 w-4" />
+                        </span>
+                        <div>
+                          <h3 className="text-xs font-semibold">{module.name}</h3>
+                          <p className="mt-0.5 text-[11px] leading-relaxed text-muted">{module.description}</p>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
               </div>
-            </div>
-            <div className="absolute -bottom-4 -left-4 hidden rounded-xl border border-white/10 bg-navy-900 px-3 py-2 text-[10px] text-slate-300 shadow-xl sm:block">
-              Live updates via Supabase Realtime
             </div>
           </div>
         </div>
@@ -270,11 +222,11 @@ export default async function LandingPage() {
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {MODULES.map((module, index) => {
               const Icon = ICONS[module.icon as keyof typeof ICONS];
-              const accentsWT = [
+              const ACCENTS = [
                 "bg-orange-50 text-brand-orange",
                 "bg-blue-50 text-brand-blue",
                 "bg-teal-50 text-brand-teal",
-                "bg-violet-50 text-violet-600",
+                "bg-amber-50 text-amber-600",
                 "bg-emerald-50 text-emerald-600",
               ];
               return (
@@ -284,7 +236,7 @@ export default async function LandingPage() {
                     index === 4 ? "sm:col-span-2 lg:col-span-1" : ""
                   }`}
                 >
-                  <div className={`inline-flex rounded-xl p-2.5 ${accentsWT[index]}`}>
+                  <div className={`inline-flex rounded-xl p-2.5 ${ACCENTS[index]}`}>
                     <Icon className="h-5 w-5" />
                   </div>
                   <div className="mt-4 flex items-center gap-2">
@@ -296,7 +248,7 @@ export default async function LandingPage() {
                     href="/login"
                     className="mt-4 inline-flex items-center gap-1 text-[11px] font-semibold text-brand-blue"
                   >
-                    Open module <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
+                    Sign in to open <ArrowRight className="h-3 w-3" />
                   </Link>
                 </div>
               );
@@ -363,7 +315,7 @@ export default async function LandingPage() {
       <section id="security" className="border-y border-line bg-canvas py-16">
         <div className="mx-auto grid max-w-6xl gap-8 px-4 sm:px-6 lg:grid-cols-2 lg:items-center">
           <div>
-            <Badge tone="violet">Security by design</Badge>
+            <Badge tone="navy">Security by design</Badge>
             <h2 className="mt-4 text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
               Authorization enforced in the database.
             </h2>
@@ -378,7 +330,7 @@ export default async function LandingPage() {
                 "PostgreSQL RLS on profiles, requests, groups and messages",
                 "Students can only read their own print jobs and complaints",
                 "Group messages readable by members only",
-                "Roles can never be self-assigned — admin changes are audited",
+                "Roles can never be self-assigned; admin changes are audited",
               ].map((item) => (
                 <li key={item} className="flex items-start gap-2">
                   <LockKeyhole className="mt-0.5 h-4 w-4 shrink-0 text-brand-teal" />
@@ -418,8 +370,9 @@ using (public.is_group_member(group_id));`}
         <div className="mx-auto max-w-3xl px-4 text-center sm:px-6">
           <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">{APP_TAGLINE}</h2>
           <p className="mx-auto mt-3 max-w-xl text-sm text-slate-300">
-            Open the demo, sign in as a student, faculty member or administrator, and see all five modules
-            backed by live data.
+            {demo
+              ? "Open the demo accounts to browse all five modules as a student, faculty member or administrator."
+              : "Sign in with your campus account to reach your timetable, print queue, groups and complaints."}
           </p>
           <div className="mt-7 flex flex-wrap justify-center gap-3">
             <ButtonLink href="/register" size="lg" variant="accent">
@@ -438,17 +391,20 @@ using (public.is_group_member(group_id));`}
       </section>
 
       <footer className="border-t border-line bg-white py-8">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-4 text-center sm:flex-row sm:px-6 sm:text-left">
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 text-center sm:flex-row sm:px-6 sm:text-left">
           <div className="flex items-center gap-2">
             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-orange text-white">
               <GraduationCap className="h-4 w-4" />
             </span>
             <span className="text-xs font-semibold text-ink">UniSync</span>
-            <span className="text-[10px] text-muted">· {APP_TAGLINE}</span>
+            <span className="text-[10px] text-muted">{APP_TAGLINE}</span>
           </div>
-          <p className="text-[10px] text-muted">
-            Built with Next.js, TypeScript, Tailwind CSS, Supabase and Recharts.
-          </p>
+          <nav aria-label="Account" className="flex items-center gap-5 text-[11px] text-slate-600">
+            <Link href="/login" className="hover:text-ink">
+              Sign in
+            </Link>
+          </nav>
+          <p className="text-[10px] text-muted">© {new Date().getFullYear()} UniSync</p>
         </div>
       </footer>
     </div>

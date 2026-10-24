@@ -42,7 +42,7 @@ const AUDIT_TONE: Record<string, string> = {
   "user.role_changed": "text-orange-600",
   "print.status_updated": "text-blue-600",
   "maintenance.updated": "text-emerald-600",
-  "announcement.published": "text-violet-600",
+  "announcement.published": "text-blue-600",
 };
 
 export default async function AdminConsolePage() {
@@ -125,7 +125,7 @@ export default async function AdminConsolePage() {
 
         <Card className="lg:col-span-2">
           <CardHeader
-            title="Print volume — last 7 days"
+            title="Print volume, last 7 days"
             description="Jobs created per day"
             icon={<Activity className="h-4 w-4" />}
           />

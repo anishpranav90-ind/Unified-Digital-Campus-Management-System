@@ -10,9 +10,9 @@ import { isDemoMode } from "@/lib/env";
 
 export const metadata = { title: "Notifications" };
 
-const TYPE_TONE: Record<string, "blue" | "teal" | "orange" | "green" | "violet" | "amber" | "slate"> = {
+const TYPE_TONE: Record<string, "blue" | "teal" | "orange" | "green" | "amber" | "slate"> = {
   announcement: "blue",
-  timetable: "violet",
+  timetable: "slate",
   print: "orange",
   message: "teal",
   opportunity: "amber",

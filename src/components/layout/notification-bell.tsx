@@ -13,10 +13,10 @@ import {
 
 const TYPE_DOT: Record<string, string> = {
   announcement: "bg-blue-500",
-  timetable: "bg-violet-500",
+  timetable: "bg-sky-500",
   print: "bg-orange-500",
   message: "bg-teal-500",
-  opportunity: "bg-pink-500",
+  opportunity: "bg-amber-500",
   maintenance: "bg-emerald-500",
   system: "bg-slate-400",
 };

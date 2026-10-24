@@ -123,8 +123,8 @@ export default async function AdminUsersPage({
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-slate-600">{user.department?.code ?? "—"}</td>
-                  <td className="px-4 py-3 text-slate-600">{user.roll_number ?? "—"}</td>
+                  <td className="px-4 py-3 text-slate-600">{user.department?.code ?? "n/a"}</td>
+                  <td className="px-4 py-3 text-slate-600">{user.roll_number ?? "n/a"}</td>
                   <td className="whitespace-nowrap px-4 py-3 text-[10px] text-muted">
                     {formatDate(user.created_at, "dd MMM yyyy")}
                   </td>

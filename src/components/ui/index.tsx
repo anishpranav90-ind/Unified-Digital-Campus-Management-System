@@ -69,7 +69,6 @@ const BADGE_TONES: Record<string, string> = {
   red: "bg-red-50 text-red-700 ring-red-200",
   teal: "bg-teal-50 text-teal-700 ring-teal-200",
   orange: "bg-orange-50 text-orange-700 ring-orange-200",
-  violet: "bg-violet-50 text-violet-700 ring-violet-200",
   navy: "bg-navy-900 text-white ring-navy-800",
 };
 
@@ -243,7 +242,7 @@ export function StatCard({
   value: ReactNode;
   hint?: ReactNode;
   icon?: ReactNode;
-  tone?: "navy" | "orange" | "blue" | "green" | "amber" | "teal" | "violet";
+  tone?: "navy" | "orange" | "blue" | "green" | "amber" | "teal";
   href?: string;
 }) {
   const tones = {
@@ -253,7 +252,6 @@ export function StatCard({
     green: "bg-emerald-50 text-emerald-600",
     amber: "bg-amber-50 text-amber-600",
     teal: "bg-teal-50 text-teal-600",
-    violet: "bg-violet-50 text-violet-600",
   }[tone];
 
   const content = (

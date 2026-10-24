@@ -332,7 +332,7 @@ export async function updateMaintenanceRequest(
 
   await notifyUsers([existing.request.student_id], {
     title: `Complaint ${existing.request.ticket_number} updated`,
-    body: `Status: ${input.status.replace("_", " ")}${input.note ? ` — ${input.note}` : ""}`,
+    body: `Status: ${input.status.replace("_", " ")}${input.note ? `. Note: ${input.note}` : ""}`,
     type: "maintenance",
     link: `/fixora/${id}`,
   });

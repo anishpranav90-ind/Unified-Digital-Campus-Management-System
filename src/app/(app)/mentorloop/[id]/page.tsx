@@ -86,7 +86,7 @@ export default async function GroupPage({
         <Card className="overflow-hidden lg:col-span-2">
           <CardHeader
             title="Group discussion"
-            description={`Mentor: ${detail.group.mentor?.full_name ?? "—"}`}
+            description={`Mentor: ${detail.group.mentor?.full_name ?? "n/a"}`}
             icon={<MessagesSquare className="h-4 w-4" />}
             action={
               <span className="text-[10px] text-muted">
@@ -177,7 +177,7 @@ export default async function GroupPage({
             </div>
             <div className="mt-3 flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2 text-[10px] text-slate-600">
               <UserRound className="h-3.5 w-3.5" />
-              Mentor: {detail.group.mentor?.full_name ?? "—"}
+              Mentor: {detail.group.mentor?.full_name ?? "n/a"}
             </div>
           </Card>
         </div>

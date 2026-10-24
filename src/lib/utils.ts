@@ -16,23 +16,23 @@ export function formatCurrency(value: number | string) {
 }
 
 export function formatDate(value: string | Date | null | undefined, pattern = "dd MMM yyyy") {
-  if (!value) return "—";
+  if (!value) return "n/a";
   const date = typeof value === "string" ? parseISO(value) : value;
-  if (Number.isNaN(date.getTime())) return "—";
+  if (Number.isNaN(date.getTime())) return "n/a";
   return format(date, pattern);
 }
 
 export function formatDateTime(value: string | Date | null | undefined) {
-  if (!value) return "—";
+  if (!value) return "n/a";
   const date = typeof value === "string" ? parseISO(value) : value;
-  if (Number.isNaN(date.getTime())) return "—";
+  if (Number.isNaN(date.getTime())) return "n/a";
   return format(date, "dd MMM yyyy, h:mm a");
 }
 
 export function timeAgo(value: string | Date | null | undefined) {
-  if (!value) return "—";
+  if (!value) return "n/a";
   const date = typeof value === "string" ? parseISO(value) : value;
-  if (Number.isNaN(date.getTime())) return "—";
+  if (Number.isNaN(date.getTime())) return "n/a";
   return formatDistanceToNow(date, { addSuffix: true });
 }
 
@@ -42,7 +42,7 @@ export function isSameDay(value: string | Date, reference = new Date()) {
 }
 
 export function formatTime(value: string | null | undefined) {
-  if (!value) return "—";
+  if (!value) return "n/a";
   const [h, m] = value.slice(0, 5).split(":");
   const hours = Number(h);
   if (Number.isNaN(hours)) return value;
@@ -54,7 +54,7 @@ export function formatTime(value: string | null | undefined) {
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 export function dayName(day: number) {
-  return DAY_NAMES[day] ?? "—";
+  return DAY_NAMES[day] ?? "N/A";
 }
 
 export function todayDayNumber() {
@@ -99,7 +99,7 @@ export function safeExternalUrl(raw: string | null | undefined) {
 }
 
 export function fileSizeLabel(bytes: number | null | undefined) {
-  if (!bytes) return "—";
+  if (!bytes) return "n/a";
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;

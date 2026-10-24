@@ -56,14 +56,24 @@ npx supabase link --project-ref <project-ref>
 npx supabase db push
 ```
 
+or apply the migrations with the bundled script, which records each file in `supabase_migrations.schema_migrations` (the same table the CLI uses) and applies `supabase/seed.sql`:
+
+```bash
+# SUPABASE_DB_URL = Project Settings → Database → session pooler connection string
+npm run db:apply          # apply pending migrations + reference seed
+npm run db:apply -- --status   # show applied/pending files
+```
+
 or paste the migrations into the SQL editor **in filename order**:
 
 1. `supabase/migrations/20261023000100_schema.sql` — tables, enums, constraints, indexes
 2. `supabase/migrations/20261023000200_functions_triggers.sql` — role helpers, integrity triggers, pricing and notifications
 3. `supabase/migrations/20261023000300_rls.sql` — Row Level Security policies
 4. `supabase/migrations/20261023000400_storage_realtime.sql` — private storage buckets, storage policies, realtime publication
+5. `supabase/migrations/20261024000100_profile_guard_session_user.sql` — fixes the role guard so a `SECURITY DEFINER` trigger cannot be bypassed
+6. `supabase/migrations/20261024000200_print_settings_singleton.sql` — collapses duplicate print settings and enforces a single row
 
-Then apply the reference data:
+Then apply the reference data (already included in `npm run db:apply`):
 
 ```bash
 # SQL editor
@@ -78,7 +88,7 @@ The reference seed inserts departments and default print pricing. It is safe to 
 npm run seed:demo
 ```
 
-This uses the service-role key **locally only** to create confirmed demo users and representative data (timetable, print queue, groups, opportunities, complaints, notifications). It never runs inside the app. If you previously seeded, the script reuses users and resets the domain tables.
+This creates eight confirmed demo users and representative data (timetable, print queue, groups, opportunities, complaints, notifications) from a single dataset in `scripts/demo-dataset.mjs`. It runs **locally only** and never inside the app. It uses the service-role key when `SUPABASE_SERVICE_ROLE_KEY` is set, or a direct `SUPABASE_DB_URL` connection otherwise; either way it bypasses RLS only for the seed transaction. If you previously seeded, the script reuses users and resets the domain tables.
 
 ### 4. Auth configuration
 
@@ -120,7 +130,8 @@ Demo mode turns off automatically once both Supabase keys are present. Set `NEXT
 |---|---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | Production | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Production | Public anon key (RLS still applies) |
-| `SUPABASE_SERVICE_ROLE_KEY` | Seeder only | Local seeding script; never expose to the client |
+| `SUPABASE_SERVICE_ROLE_KEY` | Seeder only | Local seeding over the Supabase admin API; never expose to the client |
+| `SUPABASE_DB_URL` | Scripts only | Direct Postgres URL for `db:apply` and the database transport of `seed:demo` |
 | `NEXT_PUBLIC_APP_URL` | Production | Origin used for auth redirects |
 | `NEXT_PUBLIC_DEMO_MODE` | No | `true` forces demo, `false` requires Supabase, blank auto-detects |
 | `DEMO_PASSWORD` | No | Demo account password (default `unisync123`) |
@@ -164,7 +175,7 @@ Verify the policies against a seeded project:
 npm run test:rls
 ```
 
-The script signs in as three roles and checks cross-user print jobs, complaints, group messages, role escalation, audit access, duplicate bookmarks and anonymous reads. It creates and removes a temporary group. A live Supabase project is required; it cannot run in demo mode.
+The script signs in as four accounts and checks cross-user print jobs, complaints, group messages, role escalation, audit access, duplicate bookmarks and anonymous reads. It creates and removes a temporary group. A live Supabase project is required; it cannot run in demo mode. This suite has been run against a live project with all five migrations applied and the demo dataset seeded: **17 passed, 0 failed**.
 
 ---
 
@@ -186,6 +197,15 @@ npm run lint
 npm run build
 ```
 
+Against a running demo server (`npm run dev`), two smoke scripts check every page and detail route for all three roles, confirm anonymous redirects and role guards, and fail on any 500 or Next.js error page:
+
+```bash
+npm run test:routes
+npm run test:details
+```
+
+Both accept an origin argument, for example `npm run test:routes -- http://localhost:3210`, or the `SMOKE_ORIGIN` environment variable.
+
 ---
 
 ## Deployment (Vercel + Supabase)
@@ -193,9 +213,11 @@ npm run build
 1. Push the repository to GitHub.
 2. Import the project in Vercel. Framework preset: Next.js. Build command `npm run build`.
 3. Add the production environment variables from the table above. Do **not** add `SUPABASE_SERVICE_ROLE_KEY` to Vercel.
-4. Set the Supabase Site URL and redirect allow-list to the Vercel domain.
-5. Deploy, then sign in and smoke-test all three roles.
-6. Optionally schedule deadline reminders:
+4. Add and verify the chosen custom domain in Vercel, configure its DNS records, and confirm HTTPS is active.
+5. Set `NEXT_PUBLIC_APP_URL`, the Supabase Site URL and redirect allow-list to the verified custom domain.
+6. Complete every item in the launch gate below before deploying publicly.
+7. Deploy, then sign in and smoke-test all three roles.
+8. Optionally schedule deadline reminders:
 
 ```bash
 npm run reminders
@@ -215,7 +237,7 @@ Supabase free-tier projects are resource-constrained and can be paused after ina
 - **PDF handling is metadata-only.** The upload form validates MIME type and size; the app does not render or parse PDF contents, so page count is entered by the student and capped by settings. Before charging real money, add server-side PDF parsing and verify the page count.
 - **Push notifications and fee payments are not built.** FCM and Razorpay were listed as optional in the brief and are intentionally omitted rather than half-wired. In-app notifications are fully implemented. A payment provider would need order creation, signature verification and reconciliation before any fee feature ships.
 - **Demo mode is in-memory.** It exists for evaluation and preview deployments; do not treat it as persistent storage.
-- **The SQL migrations and RLS tests require a Supabase/Postgres instance.** They were authored and reviewed, but this environment had no Docker or Supabase CLI, so they were not executed here. Run `npm run test:rls` against your project before launch.
+- **The SQL migrations were applied and the RLS suite passes against a live project.** `npm run test:rls` reports 17/17 after `npm run db:apply` and `npm run seed:demo`. Re-run it against your own project before launch; the suite depends on the demo users existing.
 
 ---
 
@@ -243,11 +265,15 @@ src/
     env.ts             demo-mode detection
     session.ts         current profile and role guards
 supabase/
-  migrations/          schema, functions, RLS, storage + realtime
+  migrations/          schema, functions, RLS, storage + realtime, guard fix
   seed.sql             departments and default pricing
 scripts/
-  seed-demo.mjs        full demo dataset
+  db-apply.mjs         apply migrations + reference seed over SUPABASE_DB_URL
+  demo-dataset.mjs     the demo dataset, transport-agnostic
+  seed-demo.mjs        full demo dataset (service key or database URL)
   test-rls.mjs         policy verification
+  smoke-routes.mjs     every page, all three roles (demo)
+  smoke-details.mjs    detail pages and role guards (demo)
   deadline-reminders.mjs
 ```
 
@@ -255,7 +281,19 @@ scripts/
 
 ## Design
 
-A calm campus-operations palette: deep navy (`#0b1c33`), soft canvas (`#f5f7fb`), blue, teal, orange and green accents. Cards use 14–18 px radii, restrained shadows, dense but readable tables and a consistent badge/status language. Typography is Geist via `next/font`. All screens are responsive, keyboard-focusable and use semantic landmarks; motion respects `prefers-reduced-motion`.
+A calm campus-operations palette: deep navy (`#0b1c33`), soft canvas (`#f5f7fb`), blue, teal, orange and green accents. Cards use 14–18 px radii, restrained shadows, dense but readable tables and a consistent badge/status language. Typography is Geist via `next/font`. All screens are responsive, keyboard-focusable and use semantic landmarks.
+
+Keep the interface specific and factual: no purple gradients, pill-shaped buttons, vague hero copy, emoji icons, fake reviews, fabricated metrics or customer counters, AI-generated photos or copy, cursor animations, or excessive scroll effects. Do not add a third-party “Made with AI” attribution. Use no motion for marketing effect; ordinary functional state feedback is fine.
+
+## Launch gate
+
+Do not launch publicly until all items are complete and verified:
+
+- Choose and connect the organization's custom domain in Vercel; verify DNS and HTTPS, then point `NEXT_PUBLIC_APP_URL` and Supabase auth URLs to it. **Blocked: no custom domain has been chosen.**
+- Confirm `src/app/favicon.ico` is the approved UniSync icon and appears in the browser tab. Next.js discovers this file automatically.
+- Check the rendered site and deployment provider settings for attribution badges, including any “Made with AI” label, and remove them.
+- Publish institution-approved privacy policy and terms at `/privacy` and `/terms`, then add the footer links. **Blocked: approved legal copy has not been provided.**
+- Verify public pages and all role-specific flows on the custom domain before announcing availability.
 
 ## Troubleshooting
 

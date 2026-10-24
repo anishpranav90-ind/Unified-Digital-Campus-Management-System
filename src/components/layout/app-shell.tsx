@@ -236,7 +236,7 @@ export function AppShell({
             <div className="flex items-center gap-2 border-t border-amber-200 bg-amber-50 px-4 py-1.5 text-[10px] font-medium text-amber-800 sm:px-6">
               <FlaskConical className="h-3 w-3 shrink-0" />
               <span>
-                Demonstration mode — data is stored in server memory and resets on restart. Print output is{" "}
+                Demonstration mode: data is stored in server memory and resets on restart. Print output is{" "}
                 <strong>simulated</strong>; no physical printer is connected.
               </span>
             </div>

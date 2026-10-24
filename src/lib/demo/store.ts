@@ -338,7 +338,7 @@ function seed(): DemoStore {
       request_number: "PP-1042",
       student_id: IDS.student,
       student: profiles[0],
-      document_name: "DBMS Unit 3 — Normalisation Notes",
+      document_name: "DBMS Unit 3: Normalisation Notes",
       file_path: null,
       file_size: 684032,
       pages: 12,
@@ -361,7 +361,7 @@ function seed(): DemoStore {
       request_number: "PP-1041",
       student_id: IDS.student,
       student: profiles[0],
-      document_name: "Aarav Sharma — Resume 2026",
+      document_name: "Aarav Sharma - Resume 2026",
       file_path: null,
       file_size: 184320,
       pages: 2,
@@ -384,7 +384,7 @@ function seed(): DemoStore {
       request_number: "PP-1038",
       student_id: IDS.student,
       student: profiles[0],
-      document_name: "OS Lab Record — Sem 5",
+      document_name: "OS Lab Record: Sem 5",
       file_path: null,
       file_size: 2411724,
       pages: 30,
@@ -522,7 +522,7 @@ function seed(): DemoStore {
     { id: `${msgs}0002`, group_id: IDS.group1, sender_id: IDS.student2, body: "Ma'am, can we use the 3NF decomposition from Wednesday's lecture for question 4?", created_at: shift(-1, -2), sender: { id: IDS.student2, full_name: "Priya Nair", role: "student" } },
     { id: `${msgs}0003`, group_id: IDS.group1, sender_id: IDS.faculty, body: "Yes. Show both the original and decomposed schemas so the steps are clear.", created_at: shift(0, -4), sender: { id: IDS.faculty, full_name: "Dr. Meera Iyer", role: "faculty" } },
     { id: `${msgs}0004`, group_id: IDS.group1, sender_id: IDS.student4, body: "Sharing my notes from today's class. Chapter 7 starts at page 12.", created_at: shift(0, -2), sender: { id: IDS.student4, full_name: "Ananya Rao", role: "student" } },
-    { id: `${msgs}0005`, group_id: IDS.group1, sender_id: IDS.student, body: "Thanks Ananya! I had one question about BCNF vs 3NF — can we discuss it after the lab?", created_at: shift(0, -1), sender: { id: IDS.student, full_name: "Aarav Sharma", role: "student" } },
+    { id: `${msgs}0005`, group_id: IDS.group1, sender_id: IDS.student, body: "Thanks Ananya! I had one question about BCNF vs 3NF. Can we discuss it after the lab?", created_at: shift(0, -1), sender: { id: IDS.student, full_name: "Aarav Sharma", role: "student" } },
     { id: `${msgs}0006`, group_id: IDS.group2, sender_id: IDS.faculty2, body: "Mock aptitude test this Saturday at 10 AM in Lab-1. Attempt the full 60 minutes without breaks.", created_at: shift(0, -5), sender: { id: IDS.faculty2, full_name: "Prof. Rohan Desai", role: "faculty" } },
     { id: `${msgs}0007`, group_id: IDS.group2, sender_id: IDS.student, body: "Count me in. Should we bring our own laptops?", created_at: shift(0, -4), sender: { id: IDS.student, full_name: "Aarav Sharma", role: "student" } },
     { id: `${msgs}0008`, group_id: IDS.group2, sender_id: IDS.faculty2, body: "Yes, laptops please. I'll share the test link at the start.", created_at: shift(0, -3), sender: { id: IDS.faculty2, full_name: "Prof. Rohan Desai", role: "faculty" } },
@@ -534,7 +534,7 @@ function seed(): DemoStore {
     {
       id: `${sc}3001`, title: "Smart India Hackathon 2026", organization: "Ministry of Education, Govt. of India",
       category: "hackathon", description: "A nationwide 36-hour innovation challenge across software and hardware problem statements. Teams of up to six students build a working prototype and pitch to a jury.",
-      eligibility: "All undergraduate students. Teams of 4–6 with at least one female member.", location: "Bengaluru (Grand Finale)", mode: "offline",
+      eligibility: "All undergraduate students. Teams of 4-6 with at least one female member.", location: "Bengaluru (Grand Finale)", mode: "offline",
       deadline: shift(18), event_start: shift(32), event_end: shift(34), apply_url: "https://www.sih.gov.in/", tags: ["innovation", "team", "prototype"],
       posted_by: IDS.faculty2, poster: { id: IDS.faculty2, full_name: "Prof. Rohan Desai" }, created_at: shift(-3),
     },
@@ -553,7 +553,7 @@ function seed(): DemoStore {
       posted_by: IDS.faculty2, poster: { id: IDS.faculty2, full_name: "Prof. Rohan Desai" }, created_at: shift(-2),
     },
     {
-      id: `${sc}3004`, title: "Graduate Software Engineer — 2027", organization: "Microsoft India",
+      id: `${sc}3004`, title: "Graduate Software Engineer: 2027", organization: "Microsoft India",
       category: "placement", description: "Campus hiring for full-time software engineering roles. Online assessment followed by technical interviews.",
       eligibility: "Final year B.E./B.Tech students with 7.0+ CGPA and no active backlogs.", location: "Hyderabad / Noida", mode: "hybrid",
       deadline: shift(14), event_start: shift(24), event_end: null, apply_url: "https://careers.microsoft.com/", tags: ["full-time", "dsa", "campus"],
@@ -574,7 +574,7 @@ function seed(): DemoStore {
       posted_by: IDS.faculty3, poster: { id: IDS.faculty3, full_name: "Dr. Sanjay Kulkarni" }, created_at: shift(-4),
     },
     {
-      id: `${sc}3007`, title: "AI for Bharat Seminar", organization: "IIT Bombay — AI Centre",
+      id: `${sc}3007`, title: "AI for Bharat Seminar", organization: "IIT Bombay: AI Centre",
       category: "seminar", description: "A half-day seminar on applied AI for public infrastructure, with demos from research labs.",
       eligibility: "Open to all students and faculty. Registration is free.", location: "Online", mode: "online",
       deadline: shift(7), event_start: shift(13), event_end: shift(13), apply_url: "https://www.iitb.ac.in/", tags: ["ai", "seminar", "research"],
@@ -658,7 +658,7 @@ function seed(): DemoStore {
 
   const maintenance_comments: MaintenanceComment[] = [
     { id: `${sc}6001`, request_id: `${sc}4001`, author_id: IDS.admin, body: "Temporary projector will be available by tomorrow morning.", is_internal: false, created_at: shift(0, -3), author: profiles[7] },
-    { id: `${sc}6002`, request_id: `${sc}4003`, author_id: IDS.student, body: "Wi-Fi seems stable now — thank you!", is_internal: false, created_at: shift(-3, -1), author: profiles[0] },
+    { id: `${sc}6002`, request_id: `${sc}4003`, author_id: IDS.student, body: "Wi-Fi seems stable now. Thank you!", is_internal: false, created_at: shift(-3, -1), author: profiles[0] },
   ];
 
   const announcements: Announcement[] = [
@@ -681,7 +681,7 @@ function seed(): DemoStore {
   ];
 
   const notifications: AppNotification[] = [
-    { id: `${sc}8001`, user_id: IDS.student, title: "Print job ready for collection", body: "PP-1041 · Aarav Sharma — Resume 2026 is waiting at the PrintPulse desk.", link: `/printpulse/${sc}2002`, type: "print", is_read: false, created_at: shift(0, -1, -30) },
+    { id: `${sc}8001`, user_id: IDS.student, title: "Print job ready for collection", body: "PP-1041: Aarav Sharma - Resume 2026 is waiting at the PrintPulse desk.", link: `/printpulse/${sc}2002`, type: "print", is_read: false, created_at: shift(0, -1, -30) },
     { id: `${sc}8002`, user_id: IDS.student, title: "New message in DBMS Doubt Clearing", body: "Ananya Rao shared notes from today's class.", link: `/mentorloop/${IDS.group1}`, type: "message", is_read: false, created_at: shift(0, -2) },
     { id: `${sc}8003`, user_id: IDS.student, title: "Mid-sem exam timetable published", body: "Check your examination dates in TimeGrid.", link: "/timegrid", type: "announcement", is_read: false, created_at: shift(0, -3) },
     { id: `${sc}8004`, user_id: IDS.student, title: "Complaint FX-2081 updated", body: "Status changed to In Progress. A temporary projector is being installed.", link: `/fixora/${sc}4001`, type: "maintenance", is_read: true, created_at: shift(0, -3) },

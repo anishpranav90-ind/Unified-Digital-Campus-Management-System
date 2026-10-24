@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "UniSync — One Campus. Everything in Sync.",
+    default: "UniSync | Campus operations in one place",
     template: "%s · UniSync",
   },
   description:

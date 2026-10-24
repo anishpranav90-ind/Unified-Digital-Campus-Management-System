@@ -1,5 +1,5 @@
 export const APP_NAME = "UniSync";
-export const APP_TAGLINE = "One Campus. Everything in Sync.";
+export const APP_TAGLINE = "Campus operations, in one place.";
 
 export const MODULES = [
   {
@@ -36,7 +36,7 @@ export const MODULES = [
     description: "Hackathons, internships and deadlines that never slip by.",
     href: "/opportune",
     icon: "Trophy",
-    accent: "violet",
+    accent: "amber",
   },
   {
     key: "fixora",
@@ -86,7 +86,7 @@ export const MAINTENANCE_STATUS_META: Record<
 > = {
   submitted: { label: "Submitted", tone: "blue", description: "Waiting for the facilities team to review." },
   under_review: { label: "Under Review", tone: "amber", description: "Being triaged by campus facilities." },
-  assigned: { label: "Assigned", tone: "violet", description: "Assigned to a maintenance staff member." },
+  assigned: { label: "Assigned", tone: "navy", description: "Assigned to a maintenance staff member." },
   in_progress: { label: "In Progress", tone: "orange", description: "Work is underway." },
   resolved: { label: "Resolved", tone: "green", description: "Issue resolved. Thank you for reporting." },
   rejected: { label: "Rejected", tone: "red", description: "Closed without action after review." },

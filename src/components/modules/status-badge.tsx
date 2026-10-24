@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui";
 import { MAINTENANCE_STATUS_META, PRINT_STATUS_META, OPPORTUNITY_CATEGORIES } from "@/lib/constants";
 
-type Tone = "slate" | "blue" | "green" | "amber" | "red" | "teal" | "orange" | "violet" | "navy";
+type Tone = "slate" | "blue" | "green" | "amber" | "red" | "teal" | "orange" | "navy";
 
 export function PrintStatusBadge({ status, className }: { status: string; className?: string }) {
   const meta = PRINT_STATUS_META[status] ?? { label: status, tone: "slate" };
@@ -27,7 +27,7 @@ export function OpportunityCategoryBadge({ category }: { category: string }) {
     hackathon: "orange",
     internship: "blue",
     workshop: "teal",
-    technical_event: "violet",
+    technical_event: "blue",
     competition: "amber",
     seminar: "slate",
     placement: "green",

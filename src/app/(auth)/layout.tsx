@@ -21,13 +21,10 @@ export default function AuthLayout({ children }: LayoutProps<"/">) {
           </Link>
 
           <h1 className="mt-16 max-w-md text-4xl font-semibold leading-tight">
-            One Campus.
-            <br />
-            <span className="text-brand-orange">Everything in Sync.</span>
+            Manage campus schedules, printing, mentoring, opportunities, and maintenance.
           </h1>
           <p className="mt-4 max-w-sm text-sm leading-relaxed text-slate-300">
-            Print queues, timetables, mentorship, opportunities and maintenance — connected in one secure
-            platform for students, faculty and administrators.
+            Students, faculty, and administrators use role-specific tools with database-enforced access controls.
           </p>
 
           <div className="mt-10 grid max-w-md grid-cols-2 gap-3">
@@ -48,8 +45,8 @@ export default function AuthLayout({ children }: LayoutProps<"/">) {
         <div className="relative">
           <div className="flex items-start gap-2 rounded-xl border border-white/10 bg-white/5 p-3 text-[11px] leading-relaxed text-slate-300">
             <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-brand-teal" />
-            Role-based access and PostgreSQL Row Level Security protect every record — including print
-            documents and complaint photos.
+            Role-based access and PostgreSQL Row Level Security protect records, including print
+            documents and maintenance photos.
           </div>
           <p className="mt-4 text-[10px] text-slate-500">{APP_TAGLINE}</p>
         </div>

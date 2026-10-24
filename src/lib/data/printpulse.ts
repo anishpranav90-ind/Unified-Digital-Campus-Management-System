@@ -351,7 +351,7 @@ export async function updatePrintRequestStatus(
     processing: "is being printed",
     ready: "is ready for collection at the print desk",
     completed: "has been completed",
-    failed: "failed — please contact the print desk",
+    failed: "failed. Please contact the print desk.",
     cancelled: "was cancelled",
   };
   await notifyUsers([request.student_id], {

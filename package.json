@@ -7,8 +7,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "db:apply": "node --env-file=.env.local scripts/db-apply.mjs --seed",
     "seed:demo": "node --env-file=.env.local scripts/seed-demo.mjs --reset",
     "test:rls": "node --env-file=.env.local scripts/test-rls.mjs",
+    "test:routes": "node scripts/smoke-routes.mjs",
+    "test:details": "node scripts/smoke-details.mjs",
     "reminders": "node --env-file=.env.local scripts/deadline-reminders.mjs"
   },
   "dependencies": {
@@ -31,6 +34,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.4.3",
+    "pg": "^8.23.1",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

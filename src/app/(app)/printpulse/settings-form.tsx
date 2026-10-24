@@ -53,7 +53,7 @@ export function PrintSettingsForm({ settings }: { settings: PrintSettings }) {
       </div>
 
       <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-[10px] leading-relaxed text-amber-800">
-        <strong>Printer mode: {settings.printer_mode}</strong> — set with the <code>PRINTER_MODE</code>{" "}
+        <strong>Printer mode: {settings.printer_mode}</strong>. Set it with the <code>PRINTER_MODE</code>{" "}
         environment variable. In simulated mode, marking a job “Ready for Collection” records a simulated
         output; no document is physically printed. CUPS/IPP support is an optional module that must be
         configured and verified before claiming real printing.

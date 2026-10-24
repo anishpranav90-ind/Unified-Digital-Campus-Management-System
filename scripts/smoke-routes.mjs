@@ -1,5 +1,6 @@
-// Temporary route smoke test for demo mode. Usage: node scripts/smoke-routes.mjs [origin]
-const origin = process.argv[2] ?? "http://localhost:3210";
+// Route smoke test for demo mode. Usage: node scripts/smoke-routes.mjs [origin]
+// Requires a running dev server (`npm run dev`) with no Supabase keys (demo mode).
+const origin = process.argv[2] ?? process.env.SMOKE_ORIGIN ?? "http://localhost:3000";
 
 const users = {
   student: "11111111-1111-4111-8111-111111111101",

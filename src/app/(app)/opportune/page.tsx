@@ -6,7 +6,6 @@ import {
   CalendarClock,
   MapPin,
   Search,
-  Sparkles,
   Trophy,
   Users,
 } from "lucide-react";
@@ -62,22 +61,22 @@ export default async function OpportunePage({
       <PageHeader
         eyebrow="Opportune · Events & opportunities"
         title="Opportunity board"
-        description="Hackathons, internships, workshops and scholarships — curated for campus, with deadlines you can actually track."
+        description="Hackathons, internships, workshops and scholarships for this campus, with deadlines you can track."
         actions={
           canPublish ? (
             <ButtonLink href="#publish" size="sm" variant="accent">
               Publish opportunity
             </ButtonLink>
           ) : (
-            <Badge tone="violet">
-              <Sparkles className="h-3 w-3" /> Recommended for you
+            <Badge tone="amber">
+              Recommended for you
             </Badge>
           )
         }
       />
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Live opportunities" value={opportunities.length} icon={<Trophy className="h-5 w-5" />} tone="violet" />
+        <StatCard label="Live opportunities" value={opportunities.length} icon={<Trophy className="h-5 w-5" />} tone="amber" />
         <StatCard
           label="Closing this week"
           value={opportunities.filter((item) => daysLeft(item.deadline) <= 7).length}
@@ -93,7 +92,7 @@ export default async function OpportunePage({
         <Card className="mt-5 overflow-hidden">
           <div className="bg-navy-950 px-5 py-4 text-white">
             <p className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-brand-orange">
-              <Sparkles className="h-3.5 w-3.5" /> Matched to your interests
+              Based on your interests
             </p>
             <div className="mt-3 grid gap-2 sm:grid-cols-2">
               {recommended.map((item) => (

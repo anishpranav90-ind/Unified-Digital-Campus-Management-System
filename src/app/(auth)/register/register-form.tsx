@@ -88,7 +88,7 @@ export function RegisterForm({ departments }: { departments: Department[] }) {
 
       <p className="rounded-lg bg-slate-50 px-3 py-2 text-[10px] leading-relaxed text-muted">
         New registrations are created with the <strong>student</strong> role. Faculty and administrator
-        access is granted by a campus administrator — roles can never be self-assigned.
+        access is granted by a campus administrator. Roles can never be self-assigned.
       </p>
 
       <SubmitButton className="w-full" pendingText="Creating account…">
