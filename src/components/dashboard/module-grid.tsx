@@ -21,7 +21,7 @@ export function ModuleGrid({ counts = {} }: { counts?: Record<string, string | n
           <Link
             key={module.key}
             href={module.href}
-            className="group rounded-2xl border border-line bg-white p-4 shadow-card transition-all hover:-translate-y-0.5 hover:shadow-lift"
+            className="group rounded-2xl border border-line bg-white p-4 shadow-card transition-shadow hover:shadow-lift"
           >
             <div className="flex items-start justify-between">
               <span className={`rounded-xl p-2 ${ACCENTS[index]}`}>

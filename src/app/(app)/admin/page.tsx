@@ -42,7 +42,7 @@ const AUDIT_TONE: Record<string, string> = {
   "user.role_changed": "text-orange-600",
   "print.status_updated": "text-blue-600",
   "maintenance.updated": "text-emerald-600",
-  "announcement.published": "text-blue-600",
+  "announcement.published": "text-amber-600",
 };
 
 export default async function AdminConsolePage() {

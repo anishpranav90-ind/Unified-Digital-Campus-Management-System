@@ -27,7 +27,7 @@ export function OpportunityCategoryBadge({ category }: { category: string }) {
     hackathon: "orange",
     internship: "blue",
     workshop: "teal",
-    technical_event: "blue",
+    technical_event: "navy",
     competition: "amber",
     seminar: "slate",
     placement: "green",

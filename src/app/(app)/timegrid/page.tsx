@@ -123,7 +123,7 @@ export default async function TimeGridPage({
         />
         <StatCard
           label="Next class"
-          value={nextClass ? formatTime(nextClass.start_time) : "n/a"}
+          value={nextClass ? formatTime(nextClass.start_time) : "Not set"}
           hint={nextClass ? `${nextClass.subject?.code} · ${nextClass.classroom?.name}` : "Nothing left today"}
           icon={<Clock className="h-5 w-5" />}
           tone="orange"

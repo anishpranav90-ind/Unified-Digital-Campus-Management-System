@@ -187,7 +187,7 @@ async function StudentDashboard({ profile }: { profile: Profile }) {
         />
         <StatCard
           label="Estimated print wait"
-          value={queue.estimated_wait_minutes ? `${queue.estimated_wait_minutes} min` : "n/a"}
+          value={queue.estimated_wait_minutes ? `${queue.estimated_wait_minutes} min` : "Not set"}
           hint={`${queue.pending} waiting · ${queue.processing} printing`}
           icon={<Timer className="h-5 w-5" />}
           tone="blue"
@@ -285,7 +285,7 @@ async function StudentDashboard({ profile }: { profile: Profile }) {
                   </div>
                 </div>
                 <p className="mt-3 text-[10px] text-amber-700">
-                  Simulated printing: no physical printer is connected in this environment.
+                  Simulated printing. No physical printer is connected in this environment.
                 </p>
               </div>
             ) : (

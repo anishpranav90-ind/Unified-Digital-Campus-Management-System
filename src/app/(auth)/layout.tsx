@@ -6,7 +6,7 @@ export default function AuthLayout({ children }: LayoutProps<"/">) {
   return (
     <div className="min-h-screen bg-white lg:grid lg:grid-cols-[0.95fr_1.05fr]">
       <div className="relative hidden overflow-hidden bg-navy-950 p-10 text-white lg:flex lg:flex-col lg:justify-between">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(249,115,22,0.2),transparent_55%),radial-gradient(ellipse_at_bottom_left,rgba(20,184,166,0.14),transparent_50%)]" />
+        <div className="absolute inset-0 bg-navy-950" />
         <div className="relative">
           <Link href="/" className="inline-flex items-center gap-2.5">
             <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-orange text-white">

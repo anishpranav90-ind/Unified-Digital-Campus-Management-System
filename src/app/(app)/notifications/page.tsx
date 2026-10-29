@@ -12,7 +12,7 @@ export const metadata = { title: "Notifications" };
 
 const TYPE_TONE: Record<string, "blue" | "teal" | "orange" | "green" | "amber" | "slate"> = {
   announcement: "blue",
-  timetable: "slate",
+  timetable: "blue",
   print: "orange",
   message: "teal",
   opportunity: "amber",

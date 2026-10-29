@@ -16,23 +16,23 @@ export function formatCurrency(value: number | string) {
 }
 
 export function formatDate(value: string | Date | null | undefined, pattern = "dd MMM yyyy") {
-  if (!value) return "n/a";
+  if (!value) return "Not set";
   const date = typeof value === "string" ? parseISO(value) : value;
-  if (Number.isNaN(date.getTime())) return "n/a";
+  if (Number.isNaN(date.getTime())) return "Not set";
   return format(date, pattern);
 }
 
 export function formatDateTime(value: string | Date | null | undefined) {
-  if (!value) return "n/a";
+  if (!value) return "Not set";
   const date = typeof value === "string" ? parseISO(value) : value;
-  if (Number.isNaN(date.getTime())) return "n/a";
+  if (Number.isNaN(date.getTime())) return "Not set";
   return format(date, "dd MMM yyyy, h:mm a");
 }
 
 export function timeAgo(value: string | Date | null | undefined) {
-  if (!value) return "n/a";
+  if (!value) return "Not set";
   const date = typeof value === "string" ? parseISO(value) : value;
-  if (Number.isNaN(date.getTime())) return "n/a";
+  if (Number.isNaN(date.getTime())) return "Not set";
   return formatDistanceToNow(date, { addSuffix: true });
 }
 
@@ -42,7 +42,7 @@ export function isSameDay(value: string | Date, reference = new Date()) {
 }
 
 export function formatTime(value: string | null | undefined) {
-  if (!value) return "n/a";
+  if (!value) return "Not set";
   const [h, m] = value.slice(0, 5).split(":");
   const hours = Number(h);
   if (Number.isNaN(hours)) return value;
@@ -99,7 +99,7 @@ export function safeExternalUrl(raw: string | null | undefined) {
 }
 
 export function fileSizeLabel(bytes: number | null | undefined) {
-  if (!bytes) return "n/a";
+  if (!bytes) return "Not set";
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;

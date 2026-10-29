@@ -165,7 +165,7 @@ export default async function OpportunePage({
       <div className="mt-4 flex flex-wrap gap-1.5">
         <Link
           href="/opportune"
-          className={`rounded-full border px-3 py-1.5 text-xs font-medium ${
+          className={`rounded-lg border px-3 py-1.5 text-xs font-medium ${
             filters.category === "all" ? "border-navy-900 bg-navy-900 text-white" : "border-line bg-white text-slate-600"
           }`}
         >
@@ -175,7 +175,7 @@ export default async function OpportunePage({
           <Link
             key={category.value}
             href={`/opportune?category=${category.value}`}
-            className={`rounded-full border px-3 py-1.5 text-xs font-medium ${
+            className={`rounded-lg border px-3 py-1.5 text-xs font-medium ${
               filters.category === category.value
                 ? "border-navy-900 bg-navy-900 text-white"
                 : "border-line bg-white text-slate-600 hover:border-slate-300"

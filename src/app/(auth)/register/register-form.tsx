@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import Link from "next/link";
 import { Alert, Field, Input, Select } from "@/components/ui";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { registerAction } from "@/lib/actions/auth";
@@ -89,6 +90,18 @@ export function RegisterForm({ departments }: { departments: Department[] }) {
       <p className="rounded-lg bg-slate-50 px-3 py-2 text-[10px] leading-relaxed text-muted">
         New registrations are created with the <strong>student</strong> role. Faculty and administrator
         access is granted by a campus administrator. Roles can never be self-assigned.
+      </p>
+
+      <p className="text-[10px] leading-relaxed text-muted">
+        By creating an account you agree to the{" "}
+        <Link href="/terms" className="font-medium text-brand-blue hover:underline">
+          terms and conditions
+        </Link>{" "}
+        and the{" "}
+        <Link href="/privacy" className="font-medium text-brand-blue hover:underline">
+          privacy policy
+        </Link>
+        .
       </p>
 
       <SubmitButton className="w-full" pendingText="Creating account…">

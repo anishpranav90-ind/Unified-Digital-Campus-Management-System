@@ -12,7 +12,7 @@ The five modules:
 | **Opportune** | Interest-aware opportunity discovery, bookmarks, staff publishing and safe external apply links |
 | **Fixora** | Maintenance reporting, status history, comments, priority and assignment workflow |
 
-Plus a unified dashboard for every role, notifications, global search, an administrator console with role management and an append-only audit trail.
+Plus a unified dashboard for every role, notifications, global search, an administrator console with role management and an append-only audit trail, and public privacy and terms pages.
 
 ---
 
@@ -52,8 +52,15 @@ Use **Sign in with demo account** on the login screen to switch quickly. Product
 Either connect the Supabase CLI:
 
 ```bash
-npx supabase link --project-ref <project-ref>
-npx supabase db push
+npx supabase login
+npx supabase link --project-ref YOUR_PROJECT_REF
+npx supabase db push --linked
+```
+
+First run `npx supabase login` and complete the browser/device authorization prompt. Then replace `YOUR_PROJECT_REF` with the project reference shown in Supabase **Project Settings → General**. Do not include angle brackets. The `--linked` option explicitly targets the linked remote project. For example:
+
+```powershell
+npx supabase link --project-ref cnkivbbycozmacebgecd
 ```
 
 or apply the migrations with the bundled script, which records each file in `supabase_migrations.schema_migrations` (the same table the CLI uses) and applies `supabase/seed.sql`:
@@ -197,14 +204,14 @@ npm run lint
 npm run build
 ```
 
-Against a running demo server (`npm run dev`), two smoke scripts check every page and detail route for all three roles, confirm anonymous redirects and role guards, and fail on any 500 or Next.js error page:
+Against a running **demo-mode** server (blank Supabase keys), two smoke scripts check every page and detail route for all three roles, confirm anonymous redirects and role guards, and fail on any 500 or Next.js error page:
 
 ```bash
 npm run test:routes
 npm run test:details
 ```
 
-Both accept an origin argument, for example `npm run test:routes -- http://localhost:3210`, or the `SMOKE_ORIGIN` environment variable.
+Both accept an origin argument, for example `npm run test:routes -- http://localhost:3210`, or the `SMOKE_ORIGIN` environment variable. They sign in through the demo account buttons, so against a Supabase-backed server every signed-in route reports `307 /login` and the run fails. Use the manual checklist or `npm run test:rls` in that case.
 
 ---
 
@@ -224,6 +231,17 @@ npm run reminders
 ```
 
 Run it daily with a GitHub Action, cron host or a scheduled Supabase Edge Function. It creates in-app notifications for opportunities closing within three days. It does not send email or push.
+
+### Connecting the custom domain
+
+No domain has been chosen for this project, so this step is still open. When you have one:
+
+1. Add the exact hostname in Vercel under **Project → Settings → Domains**.
+2. Create the DNS record Vercel shows for that hostname at your DNS provider. Copy the record from the panel instead of guessing: a subdomain normally needs a `CNAME`, an apex domain an `A` record.
+3. Wait until Vercel reports the domain as valid and HTTPS as active. Do not announce the site before this passes.
+4. Set `NEXT_PUBLIC_APP_URL` to `https://<domain>` in Vercel and redeploy, so canonical URLs, Open Graph tags and auth redirects use the real origin.
+5. In Supabase, open **Authentication → URL Configuration** and set **Site URL** to `https://<domain>`, then add `https://<domain>/auth/callback` to **Redirect URLs**.
+6. Repeat the role flows and `npm run test:rls`, and check `/privacy` and `/terms` on the new origin.
 
 ### Free-plan caveat
 
@@ -247,6 +265,7 @@ Supabase free-tier projects are resource-constrained and can be paused after ina
 src/
   app/
     (auth)/            login, register
+    (legal)/           privacy policy and terms and conditions
     (app)/             authenticated shell: dashboard, modules, admin, profile
     api/search         permission-aware global search
     api/printpulse     authenticated PDF download
@@ -271,6 +290,7 @@ scripts/
   db-apply.mjs         apply migrations + reference seed over SUPABASE_DB_URL
   demo-dataset.mjs     the demo dataset, transport-agnostic
   seed-demo.mjs        full demo dataset (service key or database URL)
+  generate-icons.mjs   favicon, SVG icon and Apple touch icon
   test-rls.mjs         policy verification
   smoke-routes.mjs     every page, all three roles (demo)
   smoke-details.mjs    detail pages and role guards (demo)
@@ -281,19 +301,21 @@ scripts/
 
 ## Design
 
-A calm campus-operations palette: deep navy (`#0b1c33`), soft canvas (`#f5f7fb`), blue, teal, orange and green accents. Cards use 14–18 px radii, restrained shadows, dense but readable tables and a consistent badge/status language. Typography is Geist via `next/font`. All screens are responsive, keyboard-focusable and use semantic landmarks.
+A calm campus-operations palette: deep navy (`#0b1f3a`), soft canvas (`#f6f8fb`), and orange, blue, teal, amber and green accents. There is no purple in the palette and no gradient anywhere in the interface, including the authentication panel. Cards use 14 to 18 px radii, buttons and inputs 12 px, and filter chips 6 to 8 px, so no control is pill-shaped. Shadows are restrained, tables dense but readable, and badges share one status language. Typography is Geist via `next/font`. All screens are responsive, keyboard-focusable and use semantic landmarks.
 
-Keep the interface specific and factual: no purple gradients, pill-shaped buttons, vague hero copy, emoji icons, fake reviews, fabricated metrics or customer counters, AI-generated photos or copy, cursor animations, or excessive scroll effects. Do not add a third-party “Made with AI” attribution. Use no motion for marketing effect; ordinary functional state feedback is fine.
+Keep the interface specific and factual: no purple gradients, pill-shaped buttons, vague hero copy, emoji icons, fake reviews, fabricated metrics or customer counters, AI-generated photos or copy, cursor animations, or excessive scroll effects. Do not add a third-party “Made with AI” attribution. Use no motion for marketing effect; ordinary functional state feedback is fine. Empty values read "Not set" rather than a dash, and prose uses no em dashes.
+
+Icons are generated, not hand-drawn: `scripts/generate-icons.mjs` writes `src/app/icon.svg`, `src/app/favicon.ico` (16, 32 and 48 px) and `src/app/apple-icon.png` from one vector description. Run `node scripts/generate-icons.mjs` after changing the mark.
 
 ## Launch gate
 
 Do not launch publicly until all items are complete and verified:
 
-- Choose and connect the organization's custom domain in Vercel; verify DNS and HTTPS, then point `NEXT_PUBLIC_APP_URL` and Supabase auth URLs to it. **Blocked: no custom domain has been chosen.**
-- Confirm `src/app/favicon.ico` is the approved UniSync icon and appears in the browser tab. Next.js discovers this file automatically.
-- Check the rendered site and deployment provider settings for attribution badges, including any “Made with AI” label, and remove them.
-- Publish institution-approved privacy policy and terms at `/privacy` and `/terms`, then add the footer links. **Blocked: approved legal copy has not been provided.**
-- Verify public pages and all role-specific flows on the custom domain before announcing availability.
+- [x] **Favicon.** `src/app/favicon.ico`, `src/app/icon.svg` and `src/app/apple-icon.png` are served from the app directory. Verified against a running server: `/favicon.ico` returns `image/x-icon` with three embedded sizes, `/icon.svg` returns `image/svg+xml`, `/apple-icon.png` returns a 180 px PNG, and the document head links all three.
+- [x] **Privacy policy and terms.** Published at `/privacy` and `/terms`, linked from the site footer and from the sign-up form. The copy is written against the data flows of this repository, not boilerplate. It still needs sign-off from the institution's legal or compliance office, and the contact section names the campus IT service desk rather than an individual officer.
+- [x] **Attribution.** There is no “Made with” label in the application, and none is generated at build time. The served HTML of `/`, `/privacy`, `/terms`, `/login` and `/register`, plus the production build output, were checked for `made with`, `built with`, `powered by` and `freebuff`. The only `codeBuff` substring in the build is inside the minified identifier `decodeBufferedStage`. While previewing locally a small purple “Freebuff” chip appears in the top-left corner: that is injected by the Freebuff preview browser into every page it opens, including example.com, and it never reaches a deployed build.
+- [ ] **Custom domain.** Hosting decision: Vercel. No domain exists yet, so nothing can be pointed at the deployment. **Blocked: a domain has to be registered or allocated by the institution.** Follow "Connecting the custom domain" in the deployment section once you have the exact hostname; the same hostname must be added to the Supabase Site URL and redirect allow-list.
+- [ ] **Launch verification.** Re-run the role flows and `npm run test:rls` on the custom domain, with the browser console open, before announcing availability.
 
 ## Troubleshooting
 

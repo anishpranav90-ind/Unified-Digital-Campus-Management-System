@@ -108,7 +108,7 @@ export default async function PrintPulsePage({
         />
         <StatCard
           label={isStaff ? "Average processing" : "Your queue position"}
-          value={isStaff ? `${settings.avg_processing_minutes} min` : queue.position ? `#${queue.position}` : "n/a"}
+          value={isStaff ? `${settings.avg_processing_minutes} min` : queue.position ? `#${queue.position}` : "Not set"}
           hint={
             isStaff
               ? `${settings.max_pages_per_job} page limit per job`

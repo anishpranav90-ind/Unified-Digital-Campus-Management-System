@@ -13,7 +13,7 @@ import {
 
 const TYPE_DOT: Record<string, string> = {
   announcement: "bg-blue-500",
-  timetable: "bg-sky-500",
+  timetable: "bg-blue-500",
   print: "bg-orange-500",
   message: "bg-teal-500",
   opportunity: "bg-amber-500",

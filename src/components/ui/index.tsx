@@ -353,7 +353,7 @@ export function FilterPill({
     <Link
       href={href}
       className={cn(
-        "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+        "rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors",
         active
           ? "border-navy-900 bg-navy-900 text-white"
           : "border-line bg-white text-slate-600 hover:border-slate-300 hover:text-ink",

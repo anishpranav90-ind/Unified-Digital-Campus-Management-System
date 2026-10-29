@@ -44,15 +44,15 @@ export default async function ProfilePage() {
               <dl className="mt-4 space-y-2 text-xs">
                 <div className="flex justify-between gap-2">
                   <dt className="text-muted">Department</dt>
-                  <dd className="text-right font-medium text-ink">{profile.department?.name ?? "n/a"}</dd>
+                  <dd className="text-right font-medium text-ink">{profile.department?.name ?? "Not set"}</dd>
                 </div>
                 <div className="flex justify-between gap-2">
                   <dt className="text-muted">Roll number</dt>
-                  <dd className="font-medium text-ink">{profile.roll_number ?? "n/a"}</dd>
+                  <dd className="font-medium text-ink">{profile.roll_number ?? "Not set"}</dd>
                 </div>
                 <div className="flex justify-between gap-2">
                   <dt className="text-muted">Semester</dt>
-                  <dd className="font-medium text-ink">{profile.semester ?? "n/a"}</dd>
+                  <dd className="font-medium text-ink">{profile.semester ?? "Not set"}</dd>
                 </div>
                 <div className="flex justify-between gap-2">
                   <dt className="text-muted">Joined</dt>

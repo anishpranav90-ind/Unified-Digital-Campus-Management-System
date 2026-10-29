@@ -35,7 +35,7 @@ export function PrintRequestForm({ settings }: { settings: PrintSettings }) {
           <Input
             id="document_name"
             name="document_name"
-            placeholder="e.g. DBMS Unit 3 Normalisation Notes"
+            placeholder="e.g. DBMS Unit 3, Normalisation Notes"
             maxLength={120}
             required
           />
@@ -188,7 +188,7 @@ export function PrintRequestForm({ settings }: { settings: PrintSettings }) {
           <p className="font-semibold">Simulated printer mode</p>
           <p className="mt-1">
             No physical printer is connected in this environment. Your job moves through a digital queue and
-            is clearly marked as simulated. UniSync never claims a document was physically printed.
+            is clearly marked as simulated. UniSync will never claim a document physically printed.
           </p>
         </div>
 

@@ -52,7 +52,7 @@ export function ProfileForm({ profile }: { profile: Profile }) {
           {INTEREST_OPTIONS.map((interest) => (
             <label
               key={interest}
-              className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-line bg-white px-3 py-1.5 text-[11px] font-medium capitalize text-slate-600 has-checked:border-blue-300 has-checked:bg-blue-50 has-checked:text-blue-700"
+              className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-line bg-white px-3 py-1.5 text-[11px] font-medium capitalize text-slate-600 has-checked:border-blue-300 has-checked:bg-blue-50 has-checked:text-blue-700"
             >
               <input
                 type="checkbox"

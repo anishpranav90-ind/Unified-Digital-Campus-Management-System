@@ -399,7 +399,13 @@ using (public.is_group_member(group_id));`}
             <span className="text-xs font-semibold text-ink">UniSync</span>
             <span className="text-[10px] text-muted">{APP_TAGLINE}</span>
           </div>
-          <nav aria-label="Account" className="flex items-center gap-5 text-[11px] text-slate-600">
+          <nav aria-label="Footer" className="flex flex-wrap items-center justify-center gap-5 text-[11px] text-slate-600">
+            <Link href="/privacy" className="hover:text-ink">
+              Privacy policy
+            </Link>
+            <Link href="/terms" className="hover:text-ink">
+              Terms and conditions
+            </Link>
             <Link href="/login" className="hover:text-ink">
               Sign in
             </Link>

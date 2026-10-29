@@ -235,11 +235,11 @@ export default async function PrintRequestPage({
           <Card>
             <CardHeader
               title="Student"
-              description={request.student ? request.student.email : "n/a"}
+              description={request.student ? request.student.email : "Not set"}
               icon={<FileText className="h-4 w-4" />}
             />
             <div className="p-5">
-              <p className="text-sm font-semibold text-ink">{request.student?.full_name ?? "n/a"}</p>
+              <p className="text-sm font-semibold text-ink">{request.student?.full_name ?? "Not set"}</p>
               <p className="mt-0.5 text-xs text-muted">{request.student?.roll_number ?? "No roll number"}</p>
             </div>
           </Card>

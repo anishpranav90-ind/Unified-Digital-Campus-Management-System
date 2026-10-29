@@ -2,174 +2,95 @@
 - Local:         http://localhost:3210
 - Network:       http://26.208.8.252:3210
 - Environments: .env.local
-✓ Ready in 1458ms
+✓ Ready in 930ms
 ✓ Running next.config.ts took 69ms
 - Experiments (use with caution):
   · serverActions
 
- GET /login 200 in 3.2s (next.js: 2.3s, proxy.ts: 179ms, application-code: 753ms)
- GET / 200 in 3.3s (next.js: 2.7s, proxy.ts: 178ms, application-code: 411ms)
- GET /login 200 in 262ms (next.js: 40ms, proxy.ts: 18ms, application-code: 204ms)
- GET /login 200 in 185ms (next.js: 67ms, proxy.ts: 8ms, application-code: 110ms)
- GET /dashboard 200 in 3.3s (next.js: 710ms, proxy.ts: 584ms, application-code: 1974ms)
- POST /login 200 in 4.3s (next.js: 18ms, proxy.ts: 17ms, application-code: 4.3s)
-  └─ ƒ loginAction({}, {}) in 961ms src/lib/actions/auth.ts
-[browser] Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
- GET /printpulse 200 in 2.8s (next.js: 328ms, proxy.ts: 505ms, application-code: 1960ms)
- GET /mentorloop 200 in 2.5s (next.js: 232ms, proxy.ts: 393ms, application-code: 1900ms)
- GET /mentorloop/86fe4dfb-a2f6-46e0-98d0-73b723787ac4 200 in 4.3s (next.js: 1643ms, proxy.ts: 452ms, application-code: 2.2s)
- POST /mentorloop/86fe4dfb-a2f6-46e0-98d0-73b723787ac4 200 in 4.5s (next.js: 25ms, proxy.ts: 480ms, application-code: 4.0s)
-  └─ ƒ sendMessageAction({}, {}) in 2107ms src/lib/actions/mentorloop.ts
- GET /mentorloop/86fe4dfb-a2f6-46e0-98d0-73b723787ac4 200 in 2.3s (next.js: 34ms, proxy.ts: 265ms, application-code: 2.0s)
- GET /opportune 200 in 2.4s (next.js: 190ms, proxy.ts: 357ms, application-code: 1846ms)
- GET /fixora 200 in 2.8s (next.js: 259ms, proxy.ts: 518ms, application-code: 2.1s)
- GET /timegrid 200 in 2.9s (next.js: 204ms, proxy.ts: 610ms, application-code: 2.1s)
- GET /login 307 in 1058ms (next.js: 27ms, proxy.ts: 504ms, application-code: 528ms)
- GET /dashboard 200 in 2.4s (next.js: 25ms, proxy.ts: 194ms, application-code: 2.2s)
- GET /login 200 in 118ms (next.js: 13ms, proxy.ts: 8ms, application-code: 96ms)
- GET /dashboard 200 in 2.4s (next.js: 13ms, proxy.ts: 368ms, application-code: 2.1s)
- POST /login 200 in 2.8s (next.js: 14ms, proxy.ts: 9ms, application-code: 2.8s)
-  └─ ƒ loginAction({}, {}) in 346ms src/lib/actions/auth.ts
-[browser] Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
- GET /admin 200 in 3.0s (next.js: 194ms, proxy.ts: 886ms, application-code: 1959ms)
- GET /admin/users 200 in 2.1s (next.js: 201ms, proxy.ts: 454ms, application-code: 1413ms)
- POST /admin/users 200 in 2.8s (next.js: 109ms, proxy.ts: 378ms, application-code: 2.3s)
-  └─ ƒ updateUserRoleAction({}, {}) in 1106ms src/lib/actions/admin.ts
- POST /admin/users 200 in 3.5s (next.js: 14ms, proxy.ts: 555ms, application-code: 2.9s)
-  └─ ƒ updateUserRoleAction({"success":"Role updated. The change is recorded in the audit log."}, {}) in 1785ms src/lib/actions/admin.ts
- GET /admin 200 in 1612ms (next.js: 37ms, proxy.ts: 404ms, application-code: 1171ms)
- GET /login 200 in 120ms (next.js: 25ms, proxy.ts: 7ms, application-code: 88ms)
- GET /dashboard 200 in 2.5s (next.js: 27ms, proxy.ts: 301ms, application-code: 2.2s)
- POST /login 200 in 3.2s (next.js: 15ms, proxy.ts: 7ms, application-code: 3.2s)
-  └─ ƒ loginAction({}, {}) in 666ms src/lib/actions/auth.ts
-[browser] Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
- GET /printpulse/new 200 in 2.4s (next.js: 214ms, proxy.ts: 783ms, application-code: 1427ms)
- GET /printpulse/55bc6b18-d103-4c3a-9fdd-36eed9e31700 200 in 2.8s (next.js: 1479ms, proxy.ts: 193ms, application-code: 1130ms)
- POST /printpulse/new 200 in 6.0s (next.js: 14ms, proxy.ts: 584ms, application-code: 5.4s)
-  └─ ƒ createPrintRequestAction({}, {}) in 2602ms src/lib/actions/printpulse.ts
-[browser] Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
- GET /api/printpulse/55bc6b18-d103-4c3a-9fdd-36eed9e31700/file 307 in 3.8s (next.js: 2.0s, proxy.ts: 617ms, application-code: 1100ms)
- GET / 200 in 346ms (next.js: 75ms, proxy.ts: 8ms, application-code: 264ms)
- GET / 200 in 1879ms (next.js: 13ms, proxy.ts: 726ms, application-code: 1140ms)
- GET /login 200 in 137ms (next.js: 25ms, proxy.ts: 8ms, application-code: 104ms)
- POST /login 200 in 14.4s (next.js: 15ms, proxy.ts: 8ms, application-code: 14.4s)
-  └─ ƒ loginAction({}, {}) in 1571ms src/lib/actions/auth.ts
- GET /dashboard 200 in 12.8s (next.js: 26ms, proxy.ts: 230ms, application-code: 12.5s)
-⨯ Error: The destination stream errored while writing data.
-    at ignore-listed frames {
-  digest: '3377716732'
-}
- GET /printpulse 200 in 4.3s (next.js: 37ms, proxy.ts: 1393ms, application-code: 2.9s)
- POST /printpulse 200 in 3.4s (next.js: 21ms, proxy.ts: 449ms, application-code: 2.9s)
-  └─ ƒ updatePrintSettingsAction({}, {}) in 1173ms src/lib/actions/printpulse.ts
- POST /printpulse 200 in 3.9s (next.js: 13ms, proxy.ts: 856ms, application-code: 3.1s)
-  └─ ƒ updatePrintSettingsAction({"success":"Print pricing and queue timings updated."}, {}) in 1440ms src/lib/actions/printpulse.ts
- GET /login 200 in 102ms (next.js: 15ms, proxy.ts: 6ms, application-code: 81ms)
- GET /dashboard 200 in 5.5s (next.js: 14ms, proxy.ts: 425ms, application-code: 5.0s)
- POST /login 200 in 6.5s (next.js: 14ms, proxy.ts: 7ms, application-code: 6.4s)
-  └─ ƒ loginAction({}, {}) in 925ms src/lib/actions/auth.ts
-[browser] Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
- GET /dashboard 200 in 4.0s (next.js: 16ms, proxy.ts: 890ms, application-code: 3.1s)
- GET /opportune 200 in 2.2s (next.js: 97ms, proxy.ts: 216ms, application-code: 1872ms)
- POST /opportune 200 in 3.7s (next.js: 18ms, proxy.ts: 292ms, application-code: 3.3s)
-  └─ ƒ publishOpportunityAction({}, {}) in 1807ms src/lib/actions/opportune.ts
- GET /login 200 in 111ms (next.js: 27ms, proxy.ts: 6ms, application-code: 78ms)
-✓ Compiled in 284ms
-✓ Compiled in 100ms
- GET /login 200 in 3.2s (next.js: 131ms, proxy.ts: 2.8s, application-code: 213ms)
- GET /opportune 200 in 4.0s (next.js: 218ms, proxy.ts: 2.8s, application-code: 961ms)
- GET /dashboard 200 in 3.0s (next.js: 135ms, proxy.ts: 676ms, application-code: 2.2s)
- GET /dashboard 200 in 2.5s (next.js: 23ms, proxy.ts: 300ms, application-code: 2.2s)
-✓ Compiled in 116ms
- GET /opportune 200 in 975ms (next.js: 140ms, proxy.ts: 436ms, application-code: 399ms)
- GET /dashboard 200 in 1437ms (next.js: 237ms, proxy.ts: 476ms, application-code: 724ms)
-✓ Compiled in 42ms
- GET /opportune 200 in 1024ms (next.js: 30ms, proxy.ts: 468ms, application-code: 527ms)
- GET /dashboard 200 in 1330ms (next.js: 135ms, proxy.ts: 464ms, application-code: 731ms)
-✓ Compiled in 114ms
- GET /opportune 200 in 862ms (next.js: 111ms, proxy.ts: 277ms, application-code: 475ms)
- GET /dashboard 200 in 1118ms (next.js: 241ms, proxy.ts: 274ms, application-code: 603ms)
-✓ Compiled in 103ms
-✓ Compiled in 61ms
- GET /dashboard 200 in 1335ms (next.js: 100ms, proxy.ts: 771ms, application-code: 464ms)
- GET /opportune 200 in 2.7s (next.js: 190ms, proxy.ts: 781ms, application-code: 1722ms)
-✓ Compiled in 64ms
- GET /dashboard 200 in 940ms (next.js: 22ms, proxy.ts: 422ms, application-code: 496ms)
- GET /opportune 200 in 939ms (next.js: 30ms, proxy.ts: 258ms, application-code: 651ms)
-✓ Compiled in 68ms
-✓ Compiled in 54ms
- GET /opportune 200 in 720ms (next.js: 37ms, proxy.ts: 258ms, application-code: 426ms)
- GET /dashboard 200 in 974ms (next.js: 156ms, proxy.ts: 257ms, application-code: 560ms)
- GET /opportune 200 in 5.4s (next.js: 846ms, proxy.ts: 1255ms, application-code: 3.3s)
- GET /dashboard 200 in 5.2s (next.js: 72ms, proxy.ts: 1143ms, application-code: 4.0s)
-✓ Compiled in 204ms
- GET /opportune 200 in 852ms (next.js: 101ms, proxy.ts: 342ms, application-code: 409ms)
- GET /dashboard 200 in 1138ms (next.js: 213ms, proxy.ts: 352ms, application-code: 573ms)
-✓ Compiled in 100ms
- GET /dashboard 200 in 800ms (next.js: 31ms, proxy.ts: 247ms, application-code: 522ms)
- GET /opportune 200 in 925ms (next.js: 127ms, proxy.ts: 262ms, application-code: 536ms)
-✓ Compiled in 173ms
- GET /opportune 200 in 1238ms (next.js: 179ms, proxy.ts: 397ms, application-code: 662ms)
- GET /dashboard 200 in 7.3s (next.js: 37ms, proxy.ts: 6.3s, application-code: 998ms)
-✓ Compiled in 77ms
- GET /dashboard 200 in 997ms (next.js: 95ms, proxy.ts: 244ms, application-code: 658ms)
- GET /opportune 200 in 1423ms (next.js: 203ms, proxy.ts: 265ms, application-code: 955ms)
-✓ Compiled in 63ms
- GET /dashboard 200 in 855ms (next.js: 30ms, proxy.ts: 266ms, application-code: 559ms)
- GET /opportune 200 in 1026ms (next.js: 117ms, proxy.ts: 265ms, application-code: 644ms)
-✓ Compiled in 63ms
- GET /dashboard 200 in 1251ms (next.js: 70ms, proxy.ts: 634ms, application-code: 547ms)
- GET /opportune 200 in 1848ms (next.js: 221ms, proxy.ts: 638ms, application-code: 990ms)
-✓ Compiled in 64ms
- GET /opportune 200 in 923ms (next.js: 18ms, proxy.ts: 566ms, application-code: 338ms)
- GET /dashboard 200 in 1028ms (next.js: 53ms, proxy.ts: 224ms, application-code: 751ms)
-✓ Compiled in 64ms
- GET /opportune 200 in 1045ms (next.js: 112ms, proxy.ts: 248ms, application-code: 685ms)
- GET /dashboard 200 in 1353ms (next.js: 43ms, proxy.ts: 223ms, application-code: 1088ms)
-✓ Compiled in 65ms
- GET /opportune 200 in 1167ms (next.js: 41ms, proxy.ts: 740ms, application-code: 386ms)
- GET /dashboard 200 in 1814ms (next.js: 147ms, proxy.ts: 752ms, application-code: 914ms)
- GET /opportune 200 in 7.1s (next.js: 2.3s, proxy.ts: 1928ms, application-code: 2.9s)
- GET /dashboard 200 in 8.3s (next.js: 1705ms, proxy.ts: 1839ms, application-code: 4.8s)
-✓ Compiled in 461ms
- GET /dashboard 200 in 1911ms (next.js: 174ms, proxy.ts: 915ms, application-code: 823ms)
- GET /opportune 200 in 2.1s (next.js: 408ms, proxy.ts: 912ms, application-code: 799ms)
-✓ Compiled in 1039ms
- GET /dashboard 200 in 2.7s (next.js: 227ms, proxy.ts: 1597ms, application-code: 918ms)
- GET /opportune 200 in 2.9s (next.js: 362ms, proxy.ts: 1602ms, application-code: 934ms)
-✓ Compiled in 159ms
- GET /opportune 200 in 1914ms (next.js: 110ms, proxy.ts: 1029ms, application-code: 775ms)
- GET /dashboard 200 in 2.5s (next.js: 263ms, proxy.ts: 1026ms, application-code: 1229ms)
-✓ Compiled in 123ms
- GET /opportune 200 in 1192ms (next.js: 30ms, proxy.ts: 569ms, application-code: 594ms)
- GET /dashboard 200 in 1357ms (next.js: 148ms, proxy.ts: 564ms, application-code: 645ms)
- GET / 200 in 1139ms (next.js: 263ms, proxy.ts: 15ms, application-code: 861ms)
- GET /login 200 in 155ms (next.js: 62ms, proxy.ts: 10ms, application-code: 83ms)
- GET /register 200 in 2.5s (next.js: 1317ms, proxy.ts: 9ms, application-code: 1209ms)
- GET / 200 in 140ms (next.js: 21ms, proxy.ts: 9ms, application-code: 110ms)
- GET /register 200 in 1148ms (next.js: 232ms, proxy.ts: 10ms, application-code: 906ms)
- GET / 200 in 161ms (next.js: 35ms, proxy.ts: 8ms, application-code: 118ms)
- GET /register 200 in 337ms (next.js: 15ms, proxy.ts: 8ms, application-code: 314ms)
- POST /register 200 in 2.1s (next.js: 19ms, proxy.ts: 10ms, application-code: 2.1s)
-  └─ ƒ registerAction({}, {}) in 1624ms src/lib/actions/auth.ts
- GET /login 200 in 101ms (next.js: 33ms, proxy.ts: 8ms, application-code: 60ms)
- POST /login 200 in 764ms (next.js: 15ms, proxy.ts: 9ms, application-code: 740ms)
-  └─ ƒ loginAction({}, {}) in 716ms src/lib/actions/auth.ts
- GET /dashboard 200 in 2.8s (next.js: 32ms, proxy.ts: 578ms, application-code: 2.2s)
- POST /login 200 in 4.1s (next.js: 15ms, proxy.ts: 12ms, application-code: 4.1s)
-  └─ ƒ loginAction({"error":"Email not confirmed"}, {}) in 1184ms src/lib/actions/auth.ts
- GET /printpulse/new 200 in 1089ms (next.js: 171ms, proxy.ts: 282ms, application-code: 637ms)
- GET /dashboard 200 in 2.5s (next.js: 28ms, proxy.ts: 648ms, application-code: 1832ms)
- GET /printpulse/new 200 in 906ms (next.js: 16ms, proxy.ts: 253ms, application-code: 636ms)
- GET /timegrid 200 in 1435ms (next.js: 262ms, proxy.ts: 233ms, application-code: 940ms)
- GET /mentorloop 200 in 1285ms (next.js: 158ms, proxy.ts: 244ms, application-code: 884ms)
- GET /opportune 200 in 1664ms (next.js: 157ms, proxy.ts: 228ms, application-code: 1280ms)
- GET /fixora 200 in 1338ms (next.js: 225ms, proxy.ts: 235ms, application-code: 879ms)
- GET /announcements 200 in 1520ms (next.js: 332ms, proxy.ts: 359ms, application-code: 829ms)
- GET /notifications 200 in 1769ms (next.js: 270ms, proxy.ts: 201ms, application-code: 1297ms)
- GET /profile 200 in 2.1s (next.js: 262ms, proxy.ts: 224ms, application-code: 1593ms)
- GET / 200 in 230ms (next.js: 30ms, proxy.ts: 12ms, application-code: 189ms)
- POST /profile 200 in 858ms (next.js: 17ms, proxy.ts: 247ms, application-code: 594ms)
-  └─ ƒ logoutAction() in 313ms src/lib/actions/auth.ts
- GET /login 200 in 645ms (next.js: 561ms, proxy.ts: 9ms, application-code: 74ms)
- GET / 200 in 161ms (next.js: 61ms, proxy.ts: 9ms, application-code: 92ms)
+○ Compiling /login ...
+ GET /login 200 in 7.4s (next.js: 6.9s, proxy.ts: 149ms, application-code: 381ms)
+ GET /login 200 in 7.5s (next.js: 6.8s, proxy.ts: 150ms, application-code: 547ms)
+ GET / 200 in 8.1s (next.js: 5.5s, proxy.ts: 1087ms, application-code: 1569ms)
+ GET /admin/users 200 in 9.2s (next.js: 6.1s, proxy.ts: 1092ms, application-code: 1934ms)
+ GET /login 200 in 262ms (next.js: 130ms, proxy.ts: 18ms, application-code: 113ms)
+ GET /register 200 in 1371ms (next.js: 870ms, proxy.ts: 11ms, application-code: 489ms)
+ GET /login 200 in 179ms (next.js: 26ms, proxy.ts: 14ms, application-code: 139ms)
+ GET /register 200 in 420ms (next.js: 120ms, proxy.ts: 15ms, application-code: 285ms)
+ GET /terms 200 in 882ms (next.js: 774ms, proxy.ts: 12ms, application-code: 96ms)
+ GET / 200 in 131ms (next.js: 41ms, proxy.ts: 7ms, application-code: 83ms)
+ GET /login 200 in 91ms (next.js: 21ms, proxy.ts: 9ms, application-code: 61ms)
+ GET /login 200 in 109ms (next.js: 14ms, proxy.ts: 8ms, application-code: 87ms)
+ GET / 200 in 383ms (next.js: 18ms, proxy.ts: 9ms, application-code: 356ms)
+ GET / 200 in 288ms (next.js: 17ms, proxy.ts: 13ms, application-code: 257ms)
+ GET / 200 in 1200ms (next.js: 13ms, proxy.ts: 429ms, application-code: 759ms)
+ GET /admin 200 in 5.5s (next.js: 2.2s, proxy.ts: 1027ms, application-code: 2.3s)
+ GET /timegrid 200 in 5.4s (next.js: 841ms, proxy.ts: 864ms, application-code: 3.7s)
+ POST /timegrid 200 in 5.5s (next.js: 136ms, proxy.ts: 382ms, application-code: 4.9s)
+  └─ ƒ saveTimetableEntryAction({}, {}) in 3206ms src/lib/actions/timegrid.ts
+ GET /timegrid 200 in 2.1s (next.js: 21ms, proxy.ts: 206ms, application-code: 1881ms)
+ POST /timegrid 200 in 4.5s (next.js: 17ms, proxy.ts: 604ms, application-code: 3.9s)
+  └─ ƒ deleteTimetableEntryAction({}) in 1937ms src/lib/actions/timegrid.ts
+ GET /timegrid 200 in 2.1s (next.js: 17ms, proxy.ts: 244ms, application-code: 1821ms)
+ POST /timegrid 200 in 3.8s (next.js: 19ms, proxy.ts: 1108ms, application-code: 2.7s)
+  └─ ƒ createExamAction({}, {}) in 1219ms src/lib/actions/timegrid.ts
+ POST /timegrid 200 in 2.4s (next.js: 20ms, proxy.ts: 247ms, application-code: 2.1s)
+  └─ ƒ deleteExamAction({}) in 801ms src/lib/actions/timegrid.ts
+ POST /timegrid 200 in 2.6s (next.js: 18ms, proxy.ts: 336ms, application-code: 2.2s)
+  └─ ƒ deleteExamAction({}) in 783ms src/lib/actions/timegrid.ts
+ GET /opportune 200 in 3.4s (next.js: 1181ms, proxy.ts: 397ms, application-code: 1824ms)
+ POST /opportune 200 in 5.7s (next.js: 149ms, proxy.ts: 438ms, application-code: 5.1s)
+  └─ ƒ publishOpportunityAction({}, {}) in 3833ms src/lib/actions/opportune.ts
+ GET /opportune/1e7064fa-f43a-47d3-abd7-3e28af5963d5 200 in 3.6s (next.js: 2.3s, proxy.ts: 222ms, application-code: 1135ms)
+ POST /opportune/1e7064fa-f43a-47d3-abd7-3e28af5963d5 200 in 3.2s (next.js: 171ms, proxy.ts: 343ms, application-code: 2.7s)
+  └─ ƒ deleteOpportunityAction({}) in 1225ms src/lib/actions/opportune.ts
+ GET /login 200 in 219ms (next.js: 50ms, proxy.ts: 14ms, application-code: 154ms)
+ GET /dashboard 200 in 3.5s (next.js: 1690ms, proxy.ts: 293ms, application-code: 1498ms)
+ POST /login 200 in 4.3s (next.js: 24ms, proxy.ts: 14ms, application-code: 4.3s)
+  └─ ƒ loginAction({}, {}) in 787ms src/lib/actions/auth.ts
+ GET /mentorloop 200 in 3.0s (next.js: 998ms, proxy.ts: 270ms, application-code: 1682ms)
+ GET /mentorloop/e75a96a9-97ad-41d7-be49-66eba82bde26 200 in 3.9s (next.js: 2.1s, proxy.ts: 223ms, application-code: 1561ms)
+ POST /mentorloop 200 in 6.6s (next.js: 197ms, proxy.ts: 282ms, application-code: 6.1s)
+  └─ ƒ createGroupAction({}, {}) in 2230ms src/lib/actions/mentorloop.ts
+ POST /mentorloop/e75a96a9-97ad-41d7-be49-66eba82bde26 200 in 3.5s (next.js: 202ms, proxy.ts: 490ms, application-code: 2.8s)
+  └─ ƒ addGroupMemberAction({}) in 1327ms src/lib/actions/mentorloop.ts
+ POST /mentorloop/e75a96a9-97ad-41d7-be49-66eba82bde26 200 in 3.1s (next.js: 45ms, proxy.ts: 374ms, application-code: 2.7s)
+  └─ ƒ removeGroupMemberAction({}) in 870ms src/lib/actions/mentorloop.ts
+ GET /mentorloop/e75a96a9-97ad-41d7-be49-66eba82bde26 200 in 2.3s (next.js: 46ms, proxy.ts: 791ms, application-code: 1476ms)
+ POST /mentorloop/e75a96a9-97ad-41d7-be49-66eba82bde26 200 in 5.9s (next.js: 37ms, proxy.ts: 543ms, application-code: 5.3s)
+  └─ ƒ sendMessageAction({}, {}) in 2876ms src/lib/actions/mentorloop.ts
+ GET /login 200 in 326ms (next.js: 84ms, proxy.ts: 18ms, application-code: 224ms)
+ GET /dashboard 200 in 4.2s (next.js: 132ms, proxy.ts: 346ms, application-code: 3.7s)
+ POST /login 200 in 5.0s (next.js: 25ms, proxy.ts: 20ms, application-code: 4.9s)
+  └─ ƒ loginAction({}, {}) in 704ms src/lib/actions/auth.ts
+ GET /printpulse/new 200 in 3.3s (next.js: 1333ms, proxy.ts: 297ms, application-code: 1632ms)
+ GET /printpulse/7f6745ee-ac7a-4690-b063-77928e91f2a8 200 in 6.0s (next.js: 2.0s, proxy.ts: 340ms, application-code: 3.6s)
+ POST /printpulse/new 200 in 9.7s (next.js: 241ms, proxy.ts: 240ms, application-code: 9.2s)
+  └─ ƒ createPrintRequestAction({}, {}) in 3209ms src/lib/actions/printpulse.ts
+ GET /printpulse/7f6745ee-ac7a-4690-b063-77928e91f2a8?cancelled=1 200 in 1946ms (next.js: 31ms, proxy.ts: 260ms, application-code: 1655ms)
+ POST /printpulse/7f6745ee-ac7a-4690-b063-77928e91f2a8 200 in 3.7s (next.js: 56ms, proxy.ts: 444ms, application-code: 3.2s)
+  └─ ƒ cancelPrintRequestAction({}) in 1233ms src/lib/actions/printpulse.ts
+ GET /printpulse/7f6745ee-ac7a-4690-b063-77928e91f2a8?cancelled=1 200 in 2.2s (next.js: 15ms, proxy.ts: 300ms, application-code: 1842ms)
+ GET /fixora/new 200 in 3.8s (next.js: 1001ms, proxy.ts: 543ms, application-code: 2.3s)
+ GET /fixora/ffad7e87-e398-48bb-bcdf-8c3a25535ea8?submitted=1 200 in 5.5s (next.js: 2.3s, proxy.ts: 398ms, application-code: 2.8s)
+ POST /fixora/new 200 in 8.2s (next.js: 216ms, proxy.ts: 449ms, application-code: 7.6s)
+  └─ ƒ createMaintenanceRequestAction({}, {}) in 2052ms src/lib/actions/fixora.ts
+ POST /fixora/ffad7e87-e398-48bb-bcdf-8c3a25535ea8?submitted=1 200 in 2.8s (next.js: 251ms, proxy.ts: 270ms, application-code: 2.3s)
+  └─ ƒ addMaintenanceCommentAction({}, {}) in 1152ms src/lib/actions/fixora.ts
+ GET /opportune 200 in 2.6s (next.js: 61ms, proxy.ts: 503ms, application-code: 2000ms)
+ GET /opportune/7a0ca292-ab23-450b-9ab5-c5b93f818f8a 200 in 2.3s (next.js: 82ms, proxy.ts: 604ms, application-code: 1582ms)
+ POST /opportune/7a0ca292-ab23-450b-9ab5-c5b93f818f8a 200 in 3.0s (next.js: 49ms, proxy.ts: 397ms, application-code: 2.6s)
+  └─ ƒ toggleBookmarkAction({}) in 1133ms src/lib/actions/opportune.ts
+ POST /opportune/7a0ca292-ab23-450b-9ab5-c5b93f818f8a 200 in 3.2s (next.js: 47ms, proxy.ts: 449ms, application-code: 2.7s)
+  └─ ƒ toggleBookmarkAction({}) in 1089ms src/lib/actions/opportune.ts
+ GET /timegrid 200 in 1758ms (next.js: 78ms, proxy.ts: 227ms, application-code: 1452ms)
+ POST /opportune/7a0ca292-ab23-450b-9ab5-c5b93f818f8a 200 in 3.3s (next.js: 55ms, proxy.ts: 233ms, application-code: 3.1s)
+  └─ ƒ markNotificationReadAction("1570b58a-ac89-470a-9f8d-1c682535afa1") in 1363ms src/lib/actions/notifications.ts
+ GET /timegrid 200 in 2.5s (next.js: 13ms, proxy.ts: 367ms, application-code: 2.2s)
+ GET /announcements 200 in 1998ms (next.js: 738ms, proxy.ts: 227ms, application-code: 1032ms)
+ POST /announcements 200 in 4.4s (next.js: 129ms, proxy.ts: 276ms, application-code: 4.0s)
+  └─ ƒ publishAnnouncementAction({}, {}) in 1686ms src/lib/actions/announcements.ts
+ GET /announcements 200 in 2.3s (next.js: 12ms, proxy.ts: 467ms, application-code: 1798ms)
+ GET /timegrid 200 in 2.6s (next.js: 26ms, proxy.ts: 592ms, application-code: 1933ms)
+ POST /timegrid 200 in 2.7s (next.js: 12ms, proxy.ts: 394ms, application-code: 2.3s)
+  └─ ƒ requestCorrectionAction({}, {}) in 1429ms src/lib/actions/timegrid.ts
+[?25h

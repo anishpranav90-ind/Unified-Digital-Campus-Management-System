@@ -182,7 +182,7 @@ export default async function FixoraPage({
             <Link
               key={filter.value}
               href={`/fixora${filter.value === "all" ? "" : `?status=${filter.value}`}`}
-              className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-medium ${
+              className={`shrink-0 rounded-md px-2.5 py-1 text-[10px] font-medium ${
                 status === filter.value
                   ? "bg-navy-900 text-white"
                   : "bg-slate-100 text-slate-600 hover:bg-slate-200"
