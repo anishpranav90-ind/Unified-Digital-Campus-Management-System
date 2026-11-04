@@ -64,7 +64,12 @@ export async function getPrintQueueInfo(profile: Profile): Promise<QueueInfo> {
 
   if (isDemoMode()) {
     const active = getDemoStore()
-      .print_requests.filter((request) => ACTIVE_STATUSES.includes(request.status))
+      .print_requests.filter(
+        (request) =>
+          ACTIVE_STATUSES.includes(request.status) &&
+          ["paid", "not_required"].includes(request.payment_status) &&
+          Boolean(request.file_path),
+      )
       .sort((a, b) => a.created_at.localeCompare(b.created_at));
     const pending = active.filter((request) => request.status !== "processing").length;
     const processing = active.filter((request) => request.status === "processing").length;
@@ -164,20 +169,25 @@ export async function createPrintRequest(
     document_name: string;
     print_location: PrintLocation;
     pages: number;
+    paper_size: "a4" | "a3" | "letter";
     page_range: string | null;
     copies: number;
     color_mode: "bw" | "color";
     sides: "single" | "double";
     priority: "normal" | "urgent";
     notes: string | null;
+    payment_option: "upi" | "razorpay" | "cash";
   },
-  file: File,
+  file: File | null,
 ) {
   if (profile.role !== "student") {
     return { ok: false as const, error: "Only students can submit print requests." };
   }
   const settings = await getPrintSettings();
-  const fileError = validatePdfFile(file, settings.max_pages_per_job, input.pages);
+  if (input.payment_option === "cash" && !file) {
+    return { ok: false as const, error: "Attach a PDF before creating a cash authorization." };
+  }
+  const fileError = file ? validatePdfFile(file, settings.max_pages_per_job, input.pages) : null;
   if (fileError) return { ok: false as const, error: fileError };
 
   const estimated_cost = calculatePrintCost(settings, input);
@@ -191,17 +201,20 @@ export async function createPrintRequest(
       print_location: input.print_location,
       student: { id: profile.id, full_name: profile.full_name, email: profile.email, roll_number: profile.roll_number },
       document_name: input.document_name,
-      file_path: null,
-      file_size: file.size,
+      file_path: file ? `demo:${file.name}` : null,
+      file_size: file?.size ?? null,
       pages: input.pages,
+      paper_size: input.paper_size,
       page_range: input.page_range,
       copies: input.copies,
       color_mode: input.color_mode,
       sides: input.sides,
-      status: "submitted",
+      status: "payment_pending",
       estimated_cost,
-      payment_status: "not_required",
+      payment_status: "unpaid",
       payment_method: "none",
+      payment_option: input.payment_option,
+      upload_after_payment: input.payment_option !== "cash",
       priority: input.priority,
       print_mode: settings.printer_mode,
       notes: input.notes,
@@ -216,8 +229,8 @@ export async function createPrintRequest(
       link: `/printpulse/${request.id}`,
     });
     await notifyUsers([profile.id], {
-      title: "Print request submitted",
-      body: `${request.request_number} is in the queue. Estimated cost ₹${estimated_cost}.`,
+      title: "Print request created",
+      body: `${request.request_number} is awaiting payment verification. Estimated cost ₹${estimated_cost}.`,
       type: "print",
       link: `/printpulse/${request.id}`,
     });
@@ -225,11 +238,14 @@ export async function createPrintRequest(
   }
 
   const supabase = await createSupabaseServerClient();
-  const path = `${profile.id}/${crypto.randomUUID()}.pdf`;
-  const { error: uploadError } = await supabase.storage
-    .from("print-documents")
-    .upload(path, file, { contentType: "application/pdf", upsert: false });
-  if (uploadError) return { ok: false as const, error: `Upload failed: ${uploadError.message}` };
+  let path: string | null = null;
+  if (file) {
+    path = `${profile.id}/${crypto.randomUUID()}.pdf`;
+    const { error: uploadError } = await supabase.storage
+      .from("print-documents")
+      .upload(path, file, { contentType: "application/pdf", upsert: false });
+    if (uploadError) return { ok: false as const, error: `Upload failed: ${uploadError.message}` };
+  }
 
   const { data, error } = await supabase
     .from("print_requests")
@@ -238,8 +254,9 @@ export async function createPrintRequest(
       document_name: input.document_name,
       print_location: input.print_location,
       file_path: path,
-      file_size: file.size,
+      file_size: file?.size ?? null,
       pages: input.pages,
+      paper_size: input.paper_size,
       page_range: input.page_range,
       copies: input.copies,
       color_mode: input.color_mode,
@@ -248,12 +265,16 @@ export async function createPrintRequest(
       priority: input.priority,
       print_mode: settings.printer_mode,
       notes: input.notes,
-      status: "submitted",
+      status: "payment_pending",
+      payment_status: "unpaid",
+      payment_method: "none",
+      payment_option: input.payment_option,
+      upload_after_payment: input.payment_option !== "cash",
     })
     .select("id, request_number")
     .single();
   if (error) {
-    await supabase.storage.from("print-documents").remove([path]);
+    if (path) await supabase.storage.from("print-documents").remove([path]);
     return { ok: false as const, error: error.message };
   }
 
@@ -264,12 +285,73 @@ export async function createPrintRequest(
     link: `/printpulse/${data.id}`,
   });
   await notifyUsers([profile.id], {
-    title: "Print request submitted",
-    body: `${data.request_number} is in the queue. Estimated cost ₹${estimated_cost}.`,
+    title: "Print request created",
+    body: `${data.request_number} is awaiting payment verification. Estimated cost ₹${estimated_cost}.`,
     type: "print",
     link: `/printpulse/${data.id}`,
   });
   return { ok: true as const, id: data.id as string, simulated: settings.printer_mode === "simulated" };
+}
+
+export async function attachPaidPrintFile(
+  profile: Profile,
+  id: string,
+  file: File,
+) {
+  const request = await getPrintRequest(profile, id);
+  if (!request || request.student_id !== profile.id) {
+    return { ok: false as const, error: "Print request not found." };
+  }
+  if (
+    !request.upload_after_payment ||
+    request.payment_status !== "paid" ||
+    request.file_path ||
+    request.status !== "payment_pending"
+  ) {
+    return { ok: false as const, error: "This request is not awaiting a post-payment PDF upload." };
+  }
+  const settings = await getPrintSettings();
+  const fileError = validatePdfFile(file, settings.max_pages_per_job, request.pages);
+  if (fileError) return { ok: false as const, error: fileError };
+
+  if (isDemoMode()) {
+    const target = getDemoStore().print_requests.find((item) => item.id === id);
+    if (!target) return { ok: false as const, error: "Print request not found." };
+    target.file_path = `demo:${file.name}`;
+    target.file_size = file.size;
+    target.upload_after_payment = false;
+    target.status = "submitted";
+    target.updated_at = new Date().toISOString();
+    return { ok: true as const };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const path = `${profile.id}/${crypto.randomUUID()}.pdf`;
+  const { error: uploadError } = await supabase.storage
+    .from("print-documents")
+    .upload(path, file, { contentType: "application/pdf", upsert: false });
+  if (uploadError) return { ok: false as const, error: `Upload failed: ${uploadError.message}` };
+
+  const { data, error } = await supabase.rpc("attach_paid_print_file", {
+    p_request_id: id,
+    p_file_path: path,
+    p_file_size: file.size,
+  });
+  if (error || !data) {
+    const { error: cleanupError } = await supabase.storage.from("print-documents").remove([path]);
+    if (cleanupError) {
+      console.error("Could not remove staged PDF after failed attachment", {
+        requestId: id,
+        path,
+        error: cleanupError.message,
+      });
+    }
+    return {
+      ok: false as const,
+      error: error?.message ?? "Payment was verified, but the file could not be attached. Try again.",
+    };
+  }
+  return { ok: true as const };
 }
 
 export async function cancelPrintRequest(profile: Profile, id: string) {
@@ -278,7 +360,7 @@ export async function cancelPrintRequest(profile: Profile, id: string) {
   if (profile.role === "student" && request.student_id !== profile.id) {
     return { ok: false as const, error: "You cannot cancel another student's request." };
   }
-  if (!["submitted", "queued"].includes(request.status)) {
+  if (!["payment_pending", "submitted", "queued"].includes(request.status)) {
     return { ok: false as const, error: "This job can no longer be cancelled once processing has started." };
   }
 
@@ -294,7 +376,7 @@ export async function cancelPrintRequest(profile: Profile, id: string) {
       .from("print_requests")
       .update({ status: "cancelled", updated_at: new Date().toISOString() })
       .eq("id", id)
-      .in("status", ["submitted", "queued"]);
+      .in("status", ["payment_pending", "submitted", "queued"]);
     if (error) return { ok: false as const, error: error.message };
   }
 
@@ -321,6 +403,12 @@ export async function updatePrintRequestStatus(
   }
   const request = await getPrintRequest(profile, id);
   if (!request) return { ok: false as const, error: "Print request not found." };
+  if (request.payment_status === "unpaid") {
+    return { ok: false as const, error: "Payment must be verified before this job can enter the print queue." };
+  }
+  if (!request.file_path && status !== "failed" && status !== "cancelled") {
+    return { ok: false as const, error: "The PDF must be attached before this job can enter the print queue." };
+  }
 
   let submittedPrinterJobId: number | undefined;
   const isCupsJob = request.print_mode === "cups";
@@ -386,6 +474,7 @@ export async function updatePrintRequestStatus(
         printLocation: request.print_location,
         filePath: request.file_path,
         pages: request.pages,
+        paperSize: request.paper_size,
         pageRange: request.page_range,
         copies: request.copies,
         colorMode: request.color_mode,

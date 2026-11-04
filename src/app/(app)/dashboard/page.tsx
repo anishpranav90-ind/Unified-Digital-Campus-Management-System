@@ -173,6 +173,7 @@ async function StudentDashboard({ profile }: { profile: Profile }) {
           mentorloop: "Groups & messages",
           opportune: `${deadlines.length} closing soon`,
           fixora: `${openComplaints.length} open`,
+          ecafe: "Food ordering",
         }}
       />
 
@@ -453,6 +454,7 @@ async function FacultyDashboard({ profile }: { profile: Profile }) {
           mentorloop: `${groups.length} groups`,
           opportune: `${deadlines.length} closing soon`,
           fixora: `${openIssues.length} assigned`,
+          ecafe: "Food ordering",
         }}
       />
 
@@ -684,6 +686,7 @@ async function AdminDashboard({ profile }: { profile: Profile }) {
           mentorloop: `${stats.groups} groups`,
           opportune: `${stats.upcomingOpportunities} live`,
           fixora: `${stats.pendingMaintenance} pending`,
+          ecafe: "Food ordering",
         }}
       />
 

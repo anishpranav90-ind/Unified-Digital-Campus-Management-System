@@ -4,8 +4,10 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { FormState } from "@/lib/action-state";
 import { requireProfile } from "@/lib/session";
+import { isDemoMode } from "@/lib/env";
 import { printRequestSchema, printSettingsSchema, printStatusSchema } from "@/lib/validations";
 import {
+  attachPaidPrintFile,
   cancelPrintRequest,
   createPrintRequest,
   updatePrintRequestStatus,
@@ -18,6 +20,7 @@ export async function createPrintRequestAction(_prev: FormState, formData: FormD
     document_name: formData.get("document_name"),
     print_location: formData.get("print_location"),
     pages: formData.get("pages"),
+    paper_size: formData.get("paper_size") ?? "a4",
     page_range: formData.get("page_range") ?? "",
     copies: formData.get("copies"),
     color_mode: formData.get("color_mode"),
@@ -28,7 +31,27 @@ export async function createPrintRequestAction(_prev: FormState, formData: FormD
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Check the request details." };
 
   const file = formData.get("file");
-  if (!(file instanceof File)) return { error: "Attach a PDF document." };
+  const paymentOption = String(formData.get("payment_option") ?? "");
+  if (paymentOption !== "upi" && paymentOption !== "razorpay" && paymentOption !== "cash") {
+    return { error: "Choose UPI, Razorpay, or cash payment." };
+  }
+  if (
+    paymentOption === "upi" &&
+    (!process.env.UPI_PAYEE_VPA || !/^[\w.-]+@[\w.-]+$/.test(process.env.UPI_PAYEE_VPA))
+  ) {
+    return { error: "Direct UPI is not configured. Choose cash or configure a valid UPI_PAYEE_VPA." };
+  }
+  if (
+    paymentOption === "razorpay" &&
+    (isDemoMode() ||
+      !process.env.RAZORPAY_KEY_ID ||
+      !process.env.RAZORPAY_KEY_SECRET ||
+      !process.env.RAZORPAY_WEBHOOK_SECRET ||
+      !process.env.SUPABASE_SERVICE_ROLE_KEY)
+  ) {
+    return { error: "Razorpay is not fully configured. Choose UPI or cash, or configure Razorpay settlement first." };
+  }
+  if (!(file instanceof File) && paymentOption === "cash") return { error: "Attach a PDF for cash payment." };
 
   const result = await createPrintRequest(
     profile,
@@ -36,20 +59,36 @@ export async function createPrintRequestAction(_prev: FormState, formData: FormD
       document_name: parsed.data.document_name,
       print_location: parsed.data.print_location,
       pages: parsed.data.pages,
+      paper_size: parsed.data.paper_size,
       page_range: parsed.data.page_range || null,
       copies: parsed.data.copies,
       color_mode: parsed.data.color_mode,
       sides: parsed.data.sides,
       priority: parsed.data.priority,
       notes: parsed.data.notes || null,
+      payment_option: paymentOption,
     },
-    file,
+    file instanceof File ? file : null,
   );
   if (!result.ok) return { error: result.error };
 
   revalidatePath("/printpulse");
   revalidatePath("/dashboard");
-  redirect(`/printpulse/${result.id}`);
+  redirect(`/printpulse/${result.id}?pay=${paymentOption}`);
+}
+
+export async function attachPaidPrintFileAction(_prev: FormState, formData: FormData): Promise<FormState> {
+  const profile = await requireProfile();
+  const id = String(formData.get("id") ?? "");
+  if (!/^[\da-f-]{36}$/i.test(id)) return { error: "Invalid print request." };
+  const file = formData.get("file");
+  if (!(file instanceof File)) return { error: "Attach a PDF document." };
+  const result = await attachPaidPrintFile(profile, id, file);
+  if (!result.ok) return { error: result.error };
+  revalidatePath("/printpulse");
+  revalidatePath(`/printpulse/${id}`);
+  revalidatePath("/dashboard");
+  return { success: "PDF attached. Your verified job is now in the print queue." };
 }
 
 export async function cancelPrintRequestAction(formData: FormData) {

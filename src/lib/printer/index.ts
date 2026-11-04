@@ -15,6 +15,7 @@ export type PrinterJob = {
   printLocation: PrintLocation;
   filePath: string | null;
   pages: number;
+  paperSize: "a4" | "a3" | "letter";
   pageRange: string | null;
   copies: number;
   colorMode: "bw" | "color";
@@ -80,6 +81,12 @@ class CupsPrinter implements PrinterAdapter {
         copies: job.copies,
         sides: job.sides === "double" ? "two-sided-long-edge" : "one-sided",
         "print-color-mode": job.colorMode === "color" ? "color" : "monochrome",
+        media:
+          job.paperSize === "a3"
+            ? "iso_a3_297x420mm"
+            : job.paperSize === "letter"
+              ? "na_letter_8.5x11in"
+              : "iso_a4_210x297mm",
         ...(pageRanges ? { "page-ranges": pageRanges } : {}),
       },
       data: job.pdf,

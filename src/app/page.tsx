@@ -371,7 +371,7 @@ using (public.is_group_member(group_id));`}
           <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">{APP_TAGLINE}</h2>
           <p className="mx-auto mt-3 max-w-xl text-sm text-slate-300">
             {demo
-              ? "Open the demo accounts to browse all five modules as a student, faculty member or administrator."
+              ? "Open the demo accounts to browse all six modules as a student, faculty member or administrator."
               : "Sign in with your campus account to reach your timetable, print queue, groups and complaints."}
           </p>
           <div className="mt-7 flex flex-wrap justify-center gap-3">

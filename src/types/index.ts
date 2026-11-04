@@ -3,6 +3,7 @@ import type { PrintLocation } from "@/lib/print-locations";
 export type Role = "student" | "faculty" | "admin";
 
 export type PrintStatus =
+  | "payment_pending"
   | "submitted"
   | "queued"
   | "processing"
@@ -149,7 +150,10 @@ export interface PrintRequest {
   document_name: string;
   file_path: string | null;
   file_size: number | null;
+  payment_option: "upi" | "razorpay" | "cash";
+  upload_after_payment: boolean;
   pages: number;
+  paper_size: "a4" | "a3" | "letter";
   page_range: string | null;
   copies: number;
   color_mode: "bw" | "color";
@@ -164,6 +168,63 @@ export interface PrintRequest {
   notes: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface EcafeMenuItem {
+  id: string;
+  name: string;
+  category: "veg" | "non_veg";
+  description: string;
+  price_paise: number;
+  available: boolean;
+}
+
+export interface EcafeOrderItem extends Pick<EcafeMenuItem, "id" | "name" | "category"> {
+  quantity: number;
+  unit_price_paise: number;
+}
+
+export type EcafeOrderStatus =
+  | "DRAFT"
+  | "PAYMENT_PENDING"
+  | "VERIFIED_AND_QUEUED"
+  | "COMPLETED"
+  | "CANCELLED";
+
+export interface EcafeOrder {
+  id: string;
+  order_number: string;
+  user_id: string;
+  items: EcafeOrderItem[];
+  amount_paise: number;
+  status: EcafeOrderStatus;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EcafeOrderInput {
+  id: string;
+  quantity: number;
+}
+
+export type PaymentMethod = "upi" | "razorpay" | "cash";
+
+export interface PaymentTransaction {
+  id: string;
+  user_id: string;
+  module: "printpulse" | "ecafe";
+  print_request_id: string | null;
+  ecafe_order_id: string | null;
+  amount_paise: number;
+  method: PaymentMethod;
+  status: "pending" | "verified" | "failed" | "cancelled";
+  counter_token_hash: string | null;
+  counter_token?: string | null;
+  razorpay_order_id: string | null;
+  razorpay_payment_id: string | null;
+  payment_reference: string | null;
+  created_at: string;
+  verified_at: string | null;
 }
 
 export interface MentorGroup {

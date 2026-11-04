@@ -22,10 +22,14 @@ import { PrintStatusForm } from "../print-status-form";
 import { RealtimeRefresh } from "@/components/realtime-refresh";
 import { isDemoMode } from "@/lib/env";
 import { getPrintLocationLabel } from "@/lib/print-locations";
+import { PaymentSelection } from "@/components/payments/payment-selection";
+import { PrintCounterVerificationForm } from "@/components/payments/print-counter-verification-form";
+import { PaidPrintUploadForm } from "@/components/payments/paid-print-upload-form";
 
 export const metadata = { title: "Print job" };
 
 const FLOW: { key: PrintStatus; label: string }[] = [
+  { key: "payment_pending", label: "Payment pending" },
   { key: "submitted", label: "Submitted" },
   { key: "queued", label: "Queued" },
   { key: "processing", label: "Processing" },
@@ -50,7 +54,7 @@ export default async function PrintRequestPage({
   const canCancel =
     profile.role === "student" &&
     request.student_id === profile.id &&
-    ["submitted", "queued"].includes(request.status);
+    ["payment_pending", "submitted", "queued"].includes(request.status);
   const activeIndex = FLOW.findIndex((step) => step.key === request.status);
   const terminalFailure = request.status === "cancelled" || request.status === "failed";
 
@@ -107,7 +111,7 @@ export default async function PrintRequestPage({
                   </div>
                 </div>
               ) : (
-                <ol className="grid gap-2 sm:grid-cols-5">
+                <ol className="grid gap-2 sm:grid-cols-6">
                   {FLOW.map((step, index) => {
                     const done = activeIndex >= index;
                     const current = activeIndex === index;
@@ -160,6 +164,7 @@ export default async function PrintRequestPage({
                   ["Request number", request.request_number],
                   ["Xerox location", getPrintLocationLabel(request.print_location)],
                   ["Pages", request.pages],
+                  ["Paper size", request.paper_size.toUpperCase()],
                   ["Page range", request.page_range ?? "All pages"],
                   ["Copies", request.copies],
                   ["Color", request.color_mode === "color" ? "Color" : "Black & white"],
@@ -181,12 +186,19 @@ export default async function PrintRequestPage({
                   <p className="mt-1 text-[10px] capitalize text-muted">
                     Payment: {request.payment_status.replace("_", " ")} · {request.payment_method}
                   </p>
-                  <p className="mt-2 text-[10px] text-muted">
-                    Online payments are not connected in this deployment. Pay at the print desk
-                    when you collect the job.
-                  </p>
+                  {request.payment_status === "unpaid" ? (
+                    <p className="mt-2 text-[10px] text-amber-700">
+                      {request.file_path
+                        ? "This file is staged privately. The print queue stays locked until payment is verified."
+                        : "Payment must be verified before the PDF upload is enabled."}
+                    </p>
+                  ) : null}
+                  {request.payment_status === "paid" && !request.file_path ? (
+                    <p className="mt-2 text-[10px] text-emerald-700">
+                      Payment is verified. Upload the PDF below to release the request to the queue.
+                    </p>
+                  ) : null}
                 </div>
-
                 {!isDemoMode() && request.file_path ? (
                   <Link
                     href={`/api/printpulse/${request.id}/file`}
@@ -194,10 +206,14 @@ export default async function PrintRequestPage({
                   >
                     <Download className="h-3.5 w-3.5" /> Open private PDF (signed link)
                   </Link>
-                ) : (
+                ) : request.file_path ? (
                   <p className="rounded-lg border border-dashed border-line bg-slate-50 px-3 py-2 text-[10px] text-muted">
                     Demo mode stores only the file metadata. Connect Supabase Storage to upload and access the
                     PDF through a short-lived signed URL.
+                  </p>
+                ) : (
+                  <p className="rounded-lg border border-dashed border-line bg-slate-50 px-3 py-2 text-[10px] text-muted">
+                    No PDF is uploaded yet.
                   </p>
                 )}
 
@@ -214,6 +230,33 @@ export default async function PrintRequestPage({
               </div>
             ) : null}
           </Card>
+
+          {request.payment_status === "unpaid" && profile.role === "student" ? (
+            <PaymentSelection
+              module="printpulse"
+              entityId={request.id}
+              amountPaise={Math.round(Number(request.estimated_cost) * 100)}
+              orderNumber={request.request_number}
+              allowedMethods={[request.payment_option]}
+            />
+          ) : null}
+          {request.upload_after_payment &&
+          request.payment_status === "paid" &&
+          request.status === "payment_pending" &&
+          request.student_id === profile.id ? (
+            <PaidPrintUploadForm requestId={request.id} />
+          ) : null}
+          {request.payment_status === "paid" && request.file_path ? (
+            <Card className="border-emerald-200 bg-emerald-50">
+              <div className="p-4">
+                <p className="text-sm font-semibold text-emerald-950">Payment receipt</p>
+                <p className="mt-1 text-xs text-emerald-800">
+                  ₹{Number(request.estimated_cost).toFixed(2)} paid via {request.payment_method}. Request{" "}
+                  {request.request_number} is cleared for processing.
+                </p>
+              </div>
+            </Card>
+          ) : null}
 
           {profile.role === "student" ? (
             <Card>
@@ -250,7 +293,7 @@ export default async function PrintRequestPage({
             </div>
           </Card>
 
-          {isStaff && !terminalFailure ? (
+          {isStaff && !terminalFailure && request.payment_status !== "unpaid" && request.file_path ? (
             <Card>
               <CardHeader
                 title="Update job status"
@@ -258,6 +301,17 @@ export default async function PrintRequestPage({
                 icon={<Printer className="h-4 w-4" />}
               />
               <PrintStatusForm request={request} />
+            </Card>
+          ) : null}
+
+          {isStaff && request.payment_status === "unpaid" ? (
+            <Card>
+              <CardHeader
+                title="Verify pending payment"
+                description="Scan the student's QR only after confirming cash or UPI receipt."
+                icon={<ShieldCheck className="h-4 w-4" />}
+              />
+              <PrintCounterVerificationForm />
             </Card>
           ) : null}
 

@@ -15,6 +15,7 @@ import {
   Printer,
   ShieldCheck,
   Trophy,
+  Utensils,
   UserRound,
   Users,
   Wrench,
@@ -34,6 +35,7 @@ const ICONS = {
   CalendarDays,
   MessagesSquare,
   Trophy,
+  Utensils,
   Wrench,
 } as const;
 

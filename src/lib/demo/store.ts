@@ -4,6 +4,8 @@ import type {
   AuditLog,
   Classroom,
   Department,
+  EcafeMenuItem,
+  EcafeOrder,
   ExamSchedule,
   GroupMessage,
   MaintenanceComment,
@@ -13,6 +15,7 @@ import type {
   MentorGroupMember,
   MessageAttachment,
   Opportunity,
+  PaymentTransaction,
   PrintRequest,
   PrintSettings,
   Profile,
@@ -46,6 +49,9 @@ export interface DemoStore {
   timetable_corrections: TimetableCorrection[];
   print_settings: PrintSettings;
   print_requests: PrintRequest[];
+  ecafe_menu_items: EcafeMenuItem[];
+  ecafe_orders: EcafeOrder[];
+  payment_transactions: PaymentTransaction[];
   mentor_groups: MentorGroup[];
   mentor_group_members: MentorGroupMember[];
   group_messages: GroupMessage[];
@@ -342,12 +348,15 @@ function seed(): DemoStore {
       document_name: "DBMS Unit 3: Normalisation Notes",
       file_path: null,
       file_size: 684032,
+      payment_option: "cash",
+      upload_after_payment: false,
       pages: 12,
+      paper_size: "a4",
       page_range: "1-12",
       copies: 1,
       color_mode: "bw",
       sides: "double",
-      status: "queued",
+      status: "payment_pending",
       estimated_cost: 36,
       payment_status: "not_required",
       payment_method: "none",
@@ -366,7 +375,10 @@ function seed(): DemoStore {
       document_name: "Aarav Sharma - Resume 2026",
       file_path: null,
       file_size: 184320,
+      payment_option: "cash",
+      upload_after_payment: false,
       pages: 2,
+      paper_size: "a4",
       page_range: "1-2",
       copies: 3,
       color_mode: "bw",
@@ -390,7 +402,10 @@ function seed(): DemoStore {
       document_name: "OS Lab Record: Sem 5",
       file_path: null,
       file_size: 2411724,
+      payment_option: "cash",
+      upload_after_payment: false,
       pages: 30,
+      paper_size: "a4",
       page_range: "1-30",
       copies: 1,
       color_mode: "bw",
@@ -414,7 +429,10 @@ function seed(): DemoStore {
       document_name: "Workshop Certificate",
       file_path: null,
       file_size: 92160,
+      payment_option: "cash",
+      upload_after_payment: false,
       pages: 1,
+      paper_size: "a4",
       page_range: "1",
       copies: 1,
       color_mode: "color",
@@ -438,7 +456,10 @@ function seed(): DemoStore {
       document_name: "Placement Portfolio",
       file_path: null,
       file_size: 1310720,
+      payment_option: "cash",
+      upload_after_payment: false,
       pages: 8,
+      paper_size: "a4",
       page_range: "1-8",
       copies: 2,
       color_mode: "color",
@@ -462,7 +483,10 @@ function seed(): DemoStore {
       document_name: "Digital Circuits Assignment 2",
       file_path: null,
       file_size: 512000,
+      payment_option: "cash",
+      upload_after_payment: false,
       pages: 6,
+      paper_size: "a4",
       page_range: "1-6",
       copies: 1,
       color_mode: "bw",
@@ -477,6 +501,17 @@ function seed(): DemoStore {
       created_at: shift(0, 0, -30),
       updated_at: shift(0, 0, -6),
     },
+  ];
+
+  const ecafe_menu_items: EcafeMenuItem[] = [
+    { id: "veg-meals", name: "Veg Meals", category: "veg", description: "Rice, seasonal vegetables, dal and sides.", price_paise: 9000, available: true },
+    { id: "paneer-roll", name: "Paneer Roll", category: "veg", description: "Spiced paneer and vegetables in a soft roll.", price_paise: 6500, available: true },
+    { id: "masala-dosa", name: "Masala Dosa", category: "veg", description: "Crisp dosa with potato masala and chutneys.", price_paise: 7000, available: true },
+    { id: "lemon-rice", name: "Lemon Rice", category: "veg", description: "South Indian lemon rice with peanuts.", price_paise: 5500, available: true },
+    { id: "chicken-meals", name: "Chicken Meals", category: "non_veg", description: "Rice, chicken curry and seasonal sides.", price_paise: 13000, available: true },
+    { id: "egg-roll", name: "Egg Roll", category: "non_veg", description: "Egg, vegetables and house sauce in a roll.", price_paise: 7500, available: true },
+    { id: "chicken-biryani", name: "Chicken Biryani", category: "non_veg", description: "Chicken dum biryani with raita.", price_paise: 15000, available: true },
+    { id: "egg-fried-rice", name: "Egg Fried Rice", category: "non_veg", description: "Wok-fried rice with egg and vegetables.", price_paise: 9500, available: true },
   ];
 
   const mentor_groups: MentorGroup[] = [
@@ -720,6 +755,9 @@ function seed(): DemoStore {
     ],
     print_settings,
     print_requests,
+    ecafe_menu_items,
+    ecafe_orders: [],
+    payment_transactions: [],
     mentor_groups,
     mentor_group_members,
     group_messages,

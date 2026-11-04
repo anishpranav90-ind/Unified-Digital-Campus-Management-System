@@ -18,11 +18,13 @@ export function PrintStatusForm({ request }: { request: PrintRequest }) {
       <input type="hidden" name="id" value={request.id} />
       <Field label="Job status" htmlFor="status" required>
         <Select id="status" name="status" defaultValue={request.status}>
-          {Object.entries(PRINT_STATUS_META).map(([value, meta]) => (
+          {Object.entries(PRINT_STATUS_META)
+            .filter(([value]) => value !== "payment_pending")
+            .map(([value, meta]) => (
             <option key={value} value={value}>
               {meta.label}
             </option>
-          ))}
+            ))}
         </Select>
       </Field>
       <Field label="Note for the student" htmlFor="note" hint="Optional, shown with the notification">

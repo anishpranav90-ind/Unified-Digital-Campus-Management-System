@@ -42,6 +42,7 @@ export const metadata = { title: "PrintPulse" };
 
 const STATUS_FILTERS = [
   { value: "all", label: "All requests" },
+  { value: "payment_pending", label: "Payment pending" },
   { value: "submitted", label: "Submitted" },
   { value: "queued", label: "Queued" },
   { value: "processing", label: "Processing" },

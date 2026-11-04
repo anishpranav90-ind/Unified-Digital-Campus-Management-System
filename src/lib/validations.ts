@@ -18,14 +18,23 @@ export const registerSchema = z.object({
 export const printRequestSchema = z.object({
   document_name: z.string().trim().min(3, "Give the document a name.").max(120),
   print_location: z.enum(PRINT_LOCATION_IDS),
-  pages: z.coerce.number().int().min(1, "At least one page is required.").max(100),
+  pages: z.coerce.number().int().min(1, "At least one page is required.").max(500),
+  paper_size: z.enum(["a4", "a3", "letter"]).default("a4"),
   page_range: z.string().trim().max(40).optional().or(z.literal("")),
   copies: z.coerce.number().int().min(1).max(20),
   color_mode: z.enum(["bw", "color"]),
   sides: z.enum(["single", "double"]),
+  payment_option: z.enum(["upi", "razorpay", "cash"]).optional(),
   priority: z.enum(["normal", "urgent"]).default("normal"),
   notes: z.string().trim().max(300).optional().or(z.literal("")),
 });
+
+export const ecafeCartSchema = z.array(
+  z.object({
+    id: z.string().trim().min(1).max(80),
+    quantity: z.coerce.number().int().min(1).max(10),
+  }),
+).min(1).max(30);
 
 export const printStatusSchema = z.enum([
   "submitted",

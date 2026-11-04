@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { IndianRupee } from "lucide-react";
+import { IndianRupee, WalletCards } from "lucide-react";
 import { Alert, Field, Input, Select, Textarea } from "@/components/ui";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { createPrintRequestAction } from "@/lib/actions/printpulse";
@@ -18,6 +18,7 @@ export function PrintRequestForm({ settings }: { settings: PrintSettings }) {
   const [copies, setCopies] = useState(1);
   const [colorMode, setColorMode] = useState<"bw" | "color">("bw");
   const [sides, setSides] = useState<"single" | "double">("double");
+  const [paymentOption, setPaymentOption] = useState<"upi" | "razorpay" | "cash">("upi");
   const [fileLabel, setFileLabel] = useState("");
 
   const estimate = calculatePrintCost(settings, {
@@ -31,6 +32,21 @@ export function PrintRequestForm({ settings }: { settings: PrintSettings }) {
     <form action={formAction} className="grid gap-4 lg:grid-cols-3">
       <div className="space-y-4 rounded-2xl border border-line bg-white p-5 shadow-card lg:col-span-2">
         {state.error ? <Alert tone="error">{state.error}</Alert> : null}
+        <Field label="Payment method" htmlFor="payment_option" required>
+          <Select
+            id="payment_option"
+            name="payment_option"
+            value={paymentOption}
+            onChange={(event) => {
+              const next = event.target.value;
+              if (next === "upi" || next === "razorpay" || next === "cash") setPaymentOption(next);
+            }}
+          >
+            <option value="upi">UPI / GPay / PhonePe — pay before uploading</option>
+            <option value="razorpay">Razorpay — pay before uploading</option>
+            <option value="cash">Cash — upload now, verify at counter</option>
+          </Select>
+        </Field>
 
         <Field label="Document name" htmlFor="document_name" required>
           <Input
@@ -52,33 +68,43 @@ export function PrintRequestForm({ settings }: { settings: PrintSettings }) {
           </Select>
         </Field>
 
-        <Field
-          label="PDF document"
-          htmlFor="file"
-          hint={`PDF only · max 5 MB · up to ${settings.max_pages_per_job} pages per job`}
-          required
-        >
-          <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50/70 p-4">
-            <input
-              id="file"
-              name="file"
-              type="file"
-              accept="application/pdf,.pdf"
-              required
-              onChange={(event) => {
-                const file = event.target.files?.[0];
-                if (!file) return setFileLabel("");
-                if (file.size > MAX_PDF_BYTES) {
-                  setFileLabel("That file is larger than 5 MB.");
-                  return;
-                }
-                setFileLabel(`${file.name} · ${(file.size / 1024).toFixed(0)} KB`);
-              }}
-              className="block w-full text-xs text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-navy-900 file:px-3 file:py-2 file:text-xs file:font-medium file:text-white hover:file:bg-navy-800"
-            />
-            {fileLabel ? <p className="mt-2 text-[10px] text-slate-500">{fileLabel}</p> : null}
+        {paymentOption === "cash" ? (
+          <Field
+            label="PDF document"
+            htmlFor="file"
+            hint={`PDF only · max 5 MB · up to ${settings.max_pages_per_job} pages per job`}
+            required
+          >
+            <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50/70 p-4">
+              <input
+                id="file"
+                name="file"
+                type="file"
+                accept="application/pdf,.pdf"
+                required
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  if (!file) return setFileLabel("");
+                  if (file.size > MAX_PDF_BYTES) {
+                    setFileLabel("That file is larger than 5 MB.");
+                    return;
+                  }
+                  setFileLabel(`${file.name} · ${(file.size / 1024).toFixed(0)} KB`);
+                }}
+                className="block w-full text-xs text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-navy-900 file:px-3 file:py-2 file:text-xs file:font-medium file:text-white hover:file:bg-navy-800"
+              />
+              {fileLabel ? <p className="mt-2 text-[10px] text-slate-500">{fileLabel}</p> : null}
+            </div>
+          </Field>
+        ) : (
+          <div className="flex items-start gap-2 rounded-xl border border-blue-200 bg-blue-50 p-3 text-xs text-blue-900">
+            <WalletCards className="mt-0.5 h-4 w-4 shrink-0" />
+            <p>
+              Your PDF is not uploaded yet. First pay the exact amount and have the counter verify it; the secure
+              upload step will unlock after verification.
+            </p>
           </div>
-        </Field>
+        )}
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Number of pages" htmlFor="pages" required>
@@ -97,6 +123,14 @@ export function PrintRequestForm({ settings }: { settings: PrintSettings }) {
             <Input id="page_range" name="page_range" placeholder="All pages" />
           </Field>
         </div>
+
+        <Field label="Paper size" htmlFor="paper_size" required>
+          <Select id="paper_size" name="paper_size" defaultValue="a4">
+            <option value="a4">A4</option>
+            <option value="a3">A3</option>
+            <option value="letter">US Letter</option>
+          </Select>
+        </Field>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Copies" htmlFor="copies" required>
@@ -153,7 +187,7 @@ export function PrintRequestForm({ settings }: { settings: PrintSettings }) {
             Uploads go to the private <code>print-documents</code> bucket when Supabase Storage is connected.
           </p>
           <SubmitButton pendingText="Submitting…" variant="accent">
-            Submit print request
+            {paymentOption === "cash" ? "Upload & generate cash QR" : "Continue to payment"}
           </SubmitButton>
         </div>
       </div>
@@ -190,7 +224,7 @@ export function PrintRequestForm({ settings }: { settings: PrintSettings }) {
             </div>
             <div className="flex justify-between">
               <span>Payment</span>
-              <span>Pay at the print desk</span>
+              <span>{paymentOption === "cash" ? "Verify cash at counter" : "Verify payment before upload"}</span>
             </div>
           </div>
         </div>

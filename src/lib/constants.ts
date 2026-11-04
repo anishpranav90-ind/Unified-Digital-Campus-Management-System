@@ -47,6 +47,15 @@ export const MODULES = [
     icon: "Wrench",
     accent: "green",
   },
+  {
+    key: "ecafe",
+    name: "e-Cafe",
+    tagline: "Campus food ordering",
+    description: "Order campus meals with guarded digital or counter payment.",
+    href: "/ecafe",
+    icon: "Utensils",
+    accent: "orange",
+  },
 ] as const;
 
 export const ROLE_LABEL: Record<string, string> = {
@@ -59,6 +68,11 @@ export const PRINT_STATUS_META: Record<
   string,
   { label: string; tone: string; description: string }
 > = {
+  payment_pending: {
+    label: "Payment pending",
+    tone: "amber",
+    description: "Complete and verify payment before this job enters the print queue.",
+  },
   submitted: {
     label: "Submitted",
     tone: "blue",
