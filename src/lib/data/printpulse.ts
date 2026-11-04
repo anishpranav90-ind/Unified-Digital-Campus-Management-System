@@ -11,6 +11,7 @@ import { getDemoStore } from "@/lib/demo/store";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { notifyByRoles, notifyUsers, writeAuditLog } from "@/lib/data/helpers";
 import { calculatePrintCost } from "@/lib/print";
+import { getRazorpayPublicKey } from "@/lib/razorpay";
 import { getPrinterAdapter, type PrintReceipt } from "@/lib/printer";
 import type { PrintLocation } from "@/lib/print-locations";
 
@@ -64,7 +65,11 @@ export async function getPrintQueueInfo(profile: Profile): Promise<QueueInfo> {
 
   if (isDemoMode()) {
     const active = getDemoStore()
-      .print_requests.filter((request) => ACTIVE_STATUSES.includes(request.status))
+      .print_requests      .filter(
+        (request) =>
+          ACTIVE_STATUSES.includes(request.status) &&
+          (request.payment_status === "paid" || request.payment_status === "not_required"),
+      )
       .sort((a, b) => a.created_at.localeCompare(b.created_at));
     const pending = active.filter((request) => request.status !== "processing").length;
     const processing = active.filter((request) => request.status === "processing").length;
@@ -168,6 +173,7 @@ export async function createPrintRequest(
     copies: number;
     color_mode: "bw" | "color";
     sides: "single" | "double";
+    payment_method: "upi" | "cash";
     priority: "normal" | "urgent";
     notes: string | null;
   },
@@ -179,8 +185,14 @@ export async function createPrintRequest(
   const settings = await getPrintSettings();
   const fileError = validatePdfFile(file, settings.max_pages_per_job, input.pages);
   if (fileError) return { ok: false as const, error: fileError };
+  if (input.payment_method === "upi" && !getRazorpayPublicKey()) {
+    return { ok: false as const, error: "Razorpay is not configured. Choose cash or contact the print desk." };
+  }
 
   const estimated_cost = calculatePrintCost(settings, input);
+  if (input.payment_method === "upi" && estimated_cost <= 0) {
+    return { ok: false as const, error: "UPI checkout requires a positive total. Choose cash or contact the print desk." };
+  }
 
   if (isDemoMode()) {
     const store = getDemoStore();
@@ -200,8 +212,9 @@ export async function createPrintRequest(
       sides: input.sides,
       status: "submitted",
       estimated_cost,
-      payment_status: "not_required",
-      payment_method: "none",
+      payment_status: "unpaid",
+      payment_method: input.payment_method,
+      payment_reference: null,
       priority: input.priority,
       print_mode: settings.printer_mode,
       notes: input.notes,
@@ -217,7 +230,7 @@ export async function createPrintRequest(
     });
     await notifyUsers([profile.id], {
       title: "Print request submitted",
-      body: `${request.request_number} is in the queue. Estimated cost ₹${estimated_cost}.`,
+      body: `${request.request_number} is awaiting payment verification. Estimated cost ₹${estimated_cost}.`,
       type: "print",
       link: `/printpulse/${request.id}`,
     });
@@ -244,6 +257,9 @@ export async function createPrintRequest(
       copies: input.copies,
       color_mode: input.color_mode,
       sides: input.sides,
+      payment_method: input.payment_method,
+      payment_status: "unpaid",
+      payment_reference: null,
       estimated_cost,
       priority: input.priority,
       print_mode: settings.printer_mode,
@@ -265,11 +281,76 @@ export async function createPrintRequest(
   });
   await notifyUsers([profile.id], {
     title: "Print request submitted",
-    body: `${data.request_number} is in the queue. Estimated cost ₹${estimated_cost}.`,
+    body: `${data.request_number} is awaiting payment verification. Estimated cost ₹${estimated_cost}.`,
     type: "print",
     link: `/printpulse/${data.id}`,
   });
   return { ok: true as const, id: data.id as string, simulated: settings.printer_mode === "simulated" };
+}
+
+export async function verifyPrintPayment(
+  profile: Profile,
+  id: string,
+  paymentMethod: "cash" | "upi",
+  paymentReference: string | null,
+) {
+  if (profile.role !== "faculty" && profile.role !== "admin") {
+    return { ok: false as const, error: "Only print desk staff can verify payments." };
+  }
+  if (paymentMethod !== "cash") {
+    return { ok: false as const, error: "UPI payments must be verified by Razorpay." };
+  }
+  const request = await getPrintRequest(profile, id);
+  if (!request) return { ok: false as const, error: "Print request not found." };
+  if (request.payment_status !== "unpaid") {
+    return { ok: false as const, error: "This print request has already been verified or is no longer payable." };
+  }
+  if (!["submitted", "queued"].includes(request.status)) {
+    return { ok: false as const, error: "Only pending print requests can be verified." };
+  }
+  if (request.payment_method !== paymentMethod) {
+    return { ok: false as const, error: "The selected payment method does not match this request." };
+  }
+  if (isDemoMode()) {
+    const target = getDemoStore().print_requests.find((item) => item.id === id);
+    if (!target || target.payment_status !== "unpaid") {
+      return { ok: false as const, error: "This print request was already updated." };
+    }
+    target.payment_status = "paid";
+    target.payment_reference = paymentReference;
+    target.status = "queued";
+    target.updated_at = new Date().toISOString();
+  } else {
+    const supabase = await createSupabaseServerClient();
+    const { data, error } = await supabase
+      .from("print_requests")
+      .update({
+        payment_status: "paid",
+        payment_reference: paymentReference,
+        status: "queued",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id)
+      .eq("payment_status", "unpaid")
+      .eq("payment_method", paymentMethod)
+      .in("status", ["submitted", "queued"])
+      .select("id")
+      .maybeSingle();
+    if (error) return { ok: false as const, error: error.message };
+    if (!data) return { ok: false as const, error: "This print request was already updated." };
+  }
+
+  await notifyUsers([request.student_id], {
+    title: `Payment verified for ${request.request_number}`,
+    body: `${request.document_name} is now queued for printing.`,
+    type: "print",
+    link: `/printpulse/${request.id}`,
+  });
+  await writeAuditLog(profile, "print.payment_verified", "print_requests", id, {
+    method: paymentMethod,
+    reference: paymentReference,
+  });
+  return { ok: true as const, requestNumber: request.request_number };
 }
 
 export async function cancelPrintRequest(profile: Profile, id: string) {
@@ -322,6 +403,19 @@ export async function updatePrintRequestStatus(
   const request = await getPrintRequest(profile, id);
   if (!request) return { ok: false as const, error: "Print request not found." };
 
+  const legacyProcessingCompletion =
+    request.payment_status === "not_required" &&
+    request.status === "processing" &&
+    ["ready", "completed", "failed"].includes(status);
+  if (
+    ["queued", "processing", "ready", "completed"].includes(status) &&
+    request.payment_status !== "paid" &&
+    !legacyProcessingCompletion &&
+    !(isDemoMode() && request.payment_status === "not_required")
+  ) {
+    return { ok: false as const, error: "Verify payment before moving this request into the print queue." };
+  }
+
   let submittedPrinterJobId: number | undefined;
   const isCupsJob = request.print_mode === "cups";
   const isStartingCupsJob = isCupsJob && status === "processing";
@@ -373,6 +467,7 @@ export async function updatePrintRequestStatus(
       .update({ status: "processing", notes: note ?? request.notes, updated_at: new Date().toISOString() })
       .eq("id", id)
       .in("status", ["submitted", "queued"])
+      .eq("payment_status", "paid")
       .is("printer_job_id", null)
       .select("id")
       .maybeSingle();

@@ -1,19 +1,20 @@
 import Link from "next/link";
-import { ArrowUpRight, CalendarDays, MessagesSquare, Printer, Trophy, Wrench } from "lucide-react";
+import { ArrowUpRight, CalendarDays, Coffee, MessagesSquare, Printer, Trophy, Wrench } from "lucide-react";
 import { MODULES } from "@/lib/constants";
 
-const ICONS = { Printer, CalendarDays, MessagesSquare, Trophy, Wrench } as const;
+const ICONS = { Printer, CalendarDays, MessagesSquare, Trophy, Wrench, Coffee } as const;
 const ACCENTS = [
   "bg-orange-50 text-brand-orange",
   "bg-blue-50 text-brand-blue",
   "bg-teal-50 text-brand-teal",
   "bg-amber-50 text-amber-600",
   "bg-emerald-50 text-emerald-600",
+  "bg-orange-50 text-brand-orange",
 ];
 
 export function ModuleGrid({ counts = {} }: { counts?: Record<string, string | number | undefined> }) {
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
       {MODULES.map((module, index) => {
         const Icon = ICONS[module.icon as keyof typeof ICONS];
         const count = counts[module.key];

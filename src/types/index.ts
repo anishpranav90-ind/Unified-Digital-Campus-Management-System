@@ -159,6 +159,7 @@ export interface PrintRequest {
   estimated_cost: number;
   payment_status: "unpaid" | "paid" | "not_required" | "refunded";
   payment_method: string;
+  payment_reference?: string | null;
   priority: "normal" | "urgent";
   print_mode: "simulated" | "cups";
   notes: string | null;

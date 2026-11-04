@@ -22,6 +22,9 @@ import { PrintStatusForm } from "../print-status-form";
 import { RealtimeRefresh } from "@/components/realtime-refresh";
 import { isDemoMode } from "@/lib/env";
 import { getPrintLocationLabel } from "@/lib/print-locations";
+import { APP_URL } from "@/lib/env";
+import { getRazorpayPublicKey } from "@/lib/razorpay";
+import { PrintPaymentPanel } from "@/components/modules/printpulse/payment-panel";
 
 export const metadata = { title: "Print job" };
 
@@ -148,6 +151,13 @@ export default async function PrintRequestPage({
             </div>
           </Card>
 
+          <PrintPaymentPanel
+            request={request}
+            isStaff={isStaff}
+            razorpayKeyId={isDemoMode() ? "" : getRazorpayPublicKey()}
+            appUrl={APP_URL}
+          />
+
           <Card>
             <CardHeader
               title="Document details"
@@ -181,19 +191,19 @@ export default async function PrintRequestPage({
                   <p className="mt-1 text-[10px] capitalize text-muted">
                     Payment: {request.payment_status.replace("_", " ")} · {request.payment_method}
                   </p>
-                  <p className="mt-2 text-[10px] text-muted">
-                    Online payments are not connected in this deployment. Pay at the print desk
-                    when you collect the job.
-                  </p>
                 </div>
 
-                {!isDemoMode() && request.file_path ? (
+                {!isDemoMode() && request.file_path && (profile.role === "student" || request.payment_status !== "unpaid") ? (
                   <Link
                     href={`/api/printpulse/${request.id}/file`}
                     className="inline-flex items-center gap-1.5 rounded-lg border border-line px-3 py-2 text-[11px] font-semibold text-brand-blue hover:bg-blue-50"
                   >
                     <Download className="h-3.5 w-3.5" /> Open private PDF (signed link)
                   </Link>
+                ) : !isDemoMode() && request.file_path && request.payment_status === "unpaid" ? (
+                  <p className="rounded-lg border border-dashed border-line bg-slate-50 px-3 py-2 text-[10px] text-muted">
+                    PDF staged privately. Print desk access is enabled after payment verification.
+                  </p>
                 ) : (
                   <p className="rounded-lg border border-dashed border-line bg-slate-50 px-3 py-2 text-[10px] text-muted">
                     Demo mode stores only the file metadata. Connect Supabase Storage to upload and access the

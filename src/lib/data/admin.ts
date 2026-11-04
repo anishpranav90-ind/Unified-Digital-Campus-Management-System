@@ -26,7 +26,8 @@ export async function getAdminStats() {
       faculty: store.profiles.filter((profile) => profile.role === "faculty").length,
       admins: store.profiles.filter((profile) => profile.role === "admin").length,
       activePrint: store.print_requests.filter((request) =>
-        ["submitted", "queued", "processing"].includes(request.status),
+        ["submitted", "queued", "processing"].includes(request.status) &&
+        (request.payment_status === "paid" || request.payment_status === "not_required"),
       ).length,
       readyPrint: store.print_requests.filter((request) => request.status === "ready").length,
       totalPrint: store.print_requests.length,
@@ -50,7 +51,7 @@ export async function getAdminStats() {
   const supabase = await createSupabaseServerClient();
   const [profiles, prints, maintenance, opportunities, announcements, groups, logs] = await Promise.all([
     supabase.from("profiles").select("role"),
-    supabase.from("print_requests").select("status, estimated_cost").limit(500),
+    supabase.from("print_requests").select("status, payment_status, estimated_cost").limit(500),
     supabase.from("maintenance_requests").select("status").limit(500),
     supabase.from("opportunities").select("deadline").gte("deadline", new Date().toISOString()),
     supabase.from("announcements").select("id"),
@@ -81,7 +82,11 @@ export async function getAdminStats() {
     students: roleRows.filter((row) => row.role === "student").length,
     faculty: roleRows.filter((row) => row.role === "faculty").length,
     admins: roleRows.filter((row) => row.role === "admin").length,
-    activePrint: printRows.filter((row) => ["submitted", "queued", "processing"].includes(row.status as string))
+    activePrint: printRows.filter(
+      (row) =>
+        ["submitted", "queued", "processing"].includes(row.status as string) &&
+        (row.payment_status === "paid" || row.payment_status === "not_required"),
+    )
       .length,
     readyPrint: printRows.filter((row) => row.status === "ready").length,
     totalPrint: printRows.length,

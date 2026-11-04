@@ -47,6 +47,15 @@ export const MODULES = [
     icon: "Wrench",
     accent: "green",
   },
+  {
+    key: "ecafe",
+    name: "e-cafe",
+    tagline: "Campus Cafe",
+    description: "Browse today's menu, prepare an order and view a digital bill.",
+    href: "/ecafe",
+    icon: "Coffee",
+    accent: "orange",
+  },
 ] as const;
 
 export const ROLE_LABEL: Record<string, string> = {

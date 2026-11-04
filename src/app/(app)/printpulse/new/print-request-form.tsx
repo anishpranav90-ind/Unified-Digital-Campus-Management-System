@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useState, type FormEvent } from "react";
 import { IndianRupee } from "lucide-react";
 import { Alert, Field, Input, Select, Textarea } from "@/components/ui";
 import { SubmitButton } from "@/components/ui/submit-button";
@@ -12,13 +12,25 @@ import { MAX_PDF_BYTES } from "@/lib/constants";
 import { PRINT_LOCATION_IDS, PRINT_LOCATION_LABELS } from "@/lib/print-locations";
 import type { PrintSettings } from "@/types";
 
-export function PrintRequestForm({ settings }: { settings: PrintSettings }) {
+export function PrintRequestForm({
+  settings,
+  razorpayKeyId,
+  demo,
+}: {
+  settings: PrintSettings;
+  razorpayKeyId: string;
+  demo: boolean;
+}) {
   const [state, formAction] = useActionState(createPrintRequestAction, EMPTY_FORM_STATE);
   const [pages, setPages] = useState(1);
   const [copies, setCopies] = useState(1);
   const [colorMode, setColorMode] = useState<"bw" | "color">("bw");
   const [sides, setSides] = useState<"single" | "double">("double");
+  const [paymentMethod, setPaymentMethod] = useState<"upi" | "cash">(
+    razorpayKeyId ? "upi" : "cash",
+  );
   const [fileLabel, setFileLabel] = useState("");
+  const [validationMessage, setValidationMessage] = useState("");
 
   const estimate = calculatePrintCost(settings, {
     pages: Number.isFinite(pages) ? pages : 0,
@@ -27,10 +39,23 @@ export function PrintRequestForm({ settings }: { settings: PrintSettings }) {
     sides,
   });
 
+  function validateBeforeSubmit(event: FormEvent<HTMLFormElement>) {
+    const form = event.currentTarget;
+    if (form.checkValidity()) {
+      setValidationMessage("");
+      return;
+    }
+
+    event.preventDefault();
+    setValidationMessage("Complete the required print fields below: document name, PDF, page count and copies.");
+    form.querySelector<HTMLElement>(":invalid")?.focus();
+  }
+
   return (
-    <form action={formAction} className="grid gap-4 lg:grid-cols-3">
+    <form action={formAction} noValidate onSubmit={validateBeforeSubmit} className="grid gap-4 lg:grid-cols-3">
       <div className="space-y-4 rounded-2xl border border-line bg-white p-5 shadow-card lg:col-span-2">
         {state.error ? <Alert tone="error">{state.error}</Alert> : null}
+        {validationMessage ? <Alert tone="warning">{validationMessage}</Alert> : null}
 
         <Field label="Document name" htmlFor="document_name" required>
           <Input
@@ -148,12 +173,70 @@ export function PrintRequestForm({ settings }: { settings: PrintSettings }) {
           <Textarea id="notes" name="notes" rows={3} placeholder="Collection time, binding instructions…" />
         </Field>
 
+        <fieldset className="space-y-2">
+          <legend className="text-xs font-semibold text-slate-700">Payment method</legend>
+          <div className="grid gap-2 sm:grid-cols-2">
+            <label
+              className={`cursor-pointer rounded-xl border p-3 transition ${
+                paymentMethod === "upi" ? "border-brand-orange bg-orange-50/60" : "border-line bg-white"
+              } ${!razorpayKeyId ? "cursor-not-allowed opacity-60" : ""}`}
+            >
+              <span className="flex items-start gap-2">
+                <input
+                  type="radio"
+                  name="payment_method"
+                  value="upi"
+                  checked={paymentMethod === "upi"}
+                  disabled={!razorpayKeyId}
+                  onChange={() => setPaymentMethod("upi")}
+                  className="mt-0.5 accent-orange-600"
+                />
+                <span>
+                  <span className="block text-xs font-semibold text-ink">GPay / UPI</span>
+                  <span className="mt-0.5 block text-[10px] leading-relaxed text-muted">
+                    Pay the exact total with Razorpay Checkout. It opens UPI apps on mobile and shows a scan QR on desktop.
+                  </span>
+                    {!razorpayKeyId ? (
+                    <span className="mt-1 block text-[10px] font-medium text-amber-700">
+                        Razorpay is not configured for this deployment.
+                    </span>
+                  ) : null}
+                </span>
+              </span>
+            </label>
+            <label
+              className={`cursor-pointer rounded-xl border p-3 transition ${
+                paymentMethod === "cash" ? "border-brand-orange bg-orange-50/60" : "border-line bg-white"
+              }`}
+            >
+              <span className="flex items-start gap-2">
+                <input
+                  type="radio"
+                  name="payment_method"
+                  value="cash"
+                  checked={paymentMethod === "cash"}
+                  onChange={() => setPaymentMethod("cash")}
+                  className="mt-0.5 accent-orange-600"
+                />
+                <span>
+                  <span className="block text-xs font-semibold text-ink">Cash at counter</span>
+                  <span className="mt-0.5 block text-[10px] leading-relaxed text-muted">
+                    Stage your file and show the request QR to staff when paying.
+                  </span>
+                </span>
+              </span>
+            </label>
+          </div>
+        </fieldset>
+
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
           <p className="text-[10px] text-muted">
-            Uploads go to the private <code>print-documents</code> bucket when Supabase Storage is connected.
+            {demo
+              ? "Demo mode keeps file metadata only. In production, PDFs stay in private staging until payment verification."
+              : "Files stay in private staging and cannot enter the print queue before payment verification."}
           </p>
           <SubmitButton pendingText="Submitting…" variant="accent">
-            Submit print request
+            Stage request &amp; continue
           </SubmitButton>
         </div>
       </div>
@@ -190,7 +273,7 @@ export function PrintRequestForm({ settings }: { settings: PrintSettings }) {
             </div>
             <div className="flex justify-between">
               <span>Payment</span>
-              <span>Pay at the print desk</span>
+              <span>{paymentMethod === "upi" ? "GPay / UPI" : "Cash at counter"}</span>
             </div>
           </div>
         </div>

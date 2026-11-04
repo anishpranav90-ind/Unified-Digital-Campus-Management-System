@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Bell,
   CalendarDays,
+  Coffee,
   FlaskConical,
   GraduationCap,
   LayoutDashboard,
@@ -27,7 +28,9 @@ import { Avatar } from "@/components/ui";
 import { GlobalSearch } from "@/components/layout/global-search";
 import { NotificationBell } from "@/components/layout/notification-bell";
 import { ProfileMenu } from "@/components/layout/profile-menu";
+import { PreferencesControls } from "@/components/layout/preferences-controls";
 import { RealtimeRefresh } from "@/components/realtime-refresh";
+import { translate, type LanguageCode } from "@/lib/i18n";
 
 const ICONS = {
   Printer,
@@ -35,6 +38,7 @@ const ICONS = {
   MessagesSquare,
   Trophy,
   Wrench,
+  Coffee,
 } as const;
 
 export function AppShell({
@@ -43,6 +47,7 @@ export function AppShell({
   unreadNotifications,
   unreadMessages,
   demo,
+  initialLanguage,
   children,
 }: {
   profile: Profile;
@@ -50,30 +55,41 @@ export function AppShell({
   unreadNotifications: number;
   unreadMessages: number;
   demo: boolean;
+  initialLanguage: LanguageCode;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [language, setLanguage] = useState(initialLanguage);
+
+  useEffect(() => {
+    document.documentElement.lang =
+      initialLanguage === "en"
+        ? "en-IN"
+        : initialLanguage === "hi"
+          ? "hi-IN"
+          : `${initialLanguage}-IN`;
+  }, [initialLanguage]);
 
   const primary = [
-    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, badge: 0 },
+    { href: "/dashboard", label: translate(language, "Dashboard"), icon: LayoutDashboard, badge: 0 },
     ...MODULES.map((module) => ({
       href: module.href,
-      label: module.name,
+      label: translate(language, module.name),
       icon: ICONS[module.icon as keyof typeof ICONS],
       badge: module.key === "mentorloop" ? unreadMessages : 0,
     })),
   ];
   const campus = [
-    { href: "/announcements", label: "Announcements", icon: Megaphone, badge: 0 },
-    { href: "/notifications", label: "Notifications", icon: Bell, badge: unreadNotifications },
-    { href: "/profile", label: "My profile", icon: UserRound, badge: 0 },
+    { href: "/announcements", label: translate(language, "Announcements"), icon: Megaphone, badge: 0 },
+    { href: "/notifications", label: translate(language, "Notifications"), icon: Bell, badge: unreadNotifications },
+    { href: "/profile", label: translate(language, "My profile"), icon: UserRound, badge: 0 },
   ];
   const adminLinks =
     profile.role === "admin"
       ? [
-          { href: "/admin", label: "Admin console", icon: ShieldCheck, badge: 0 },
-          { href: "/admin/users", label: "User management", icon: Users, badge: 0 },
+          { href: "/admin", label: translate(language, "Admin console"), icon: ShieldCheck, badge: 0 },
+          { href: "/admin/users", label: translate(language, "User management"), icon: Users, badge: 0 },
         ]
       : [];
 
@@ -136,7 +152,7 @@ export function AppShell({
       <nav className="scroll-thin flex-1 space-y-6 overflow-y-auto px-3 pb-4">
         <div className="space-y-1">
           <p className="px-3 pb-1 text-[9px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-            Overview
+            {translate(language, "Overview")}
           </p>
           {primary.map((item) => (
             <NavItem key={item.href} {...item} />
@@ -144,7 +160,7 @@ export function AppShell({
         </div>
         <div className="space-y-1">
           <p className="px-3 pb-1 text-[9px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-            Campus
+            {translate(language, "Campus")}
           </p>
           {campus.map((item) => (
             <NavItem key={item.href} {...item} />
@@ -153,7 +169,7 @@ export function AppShell({
         {adminLinks.length ? (
           <div className="space-y-1">
             <p className="px-3 pb-1 text-[9px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-              Administration
+              {translate(language, "Administration")}
             </p>
             {adminLinks.map((item) => (
               <NavItem key={item.href} {...item} />
@@ -216,11 +232,15 @@ export function AppShell({
               </span>
               <span className="hidden text-sm font-bold sm:block">UniSync</span>
             </Link>
-            <div className="min-w-0 flex-1 sm:flex-none">
+            <div className="min-w-0 flex-1">
               <GlobalSearch />
             </div>
             <div className="ml-auto flex items-center gap-2">
-              <div className="hidden md:block">
+              <PreferencesControls
+                language={language}
+                onLanguageChange={setLanguage}
+              />
+              <div className="hidden xl:block">
                 <RealtimeRefresh
                   demo={demo}
                   table="notifications"

@@ -23,6 +23,7 @@ export const printRequestSchema = z.object({
   copies: z.coerce.number().int().min(1).max(20),
   color_mode: z.enum(["bw", "color"]),
   sides: z.enum(["single", "double"]),
+  payment_method: z.enum(["upi", "cash"]),
   priority: z.enum(["normal", "urgent"]).default("normal"),
   notes: z.string().trim().max(300).optional().or(z.literal("")),
 });

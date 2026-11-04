@@ -148,7 +148,7 @@ export default async function PrintPulsePage({
             <div className="rounded-xl bg-canvas p-3">
               <p className="text-[10px] font-semibold uppercase tracking-wide text-muted">Waiting</p>
               <p className="mt-1 text-2xl font-semibold text-ink">{queue.pending}</p>
-              <p className="text-[10px] text-muted">submitted + queued jobs</p>
+              <p className="text-[10px] text-muted">verified requests</p>
             </div>
             <div className="rounded-xl bg-canvas p-3">
               <p className="text-[10px] font-semibold uppercase tracking-wide text-muted">Printing</p>
@@ -278,6 +278,9 @@ export default async function PrintPulsePage({
                   </td>
                   <td className="whitespace-nowrap px-4 py-3">
                     <PrintStatusBadge status={request.status} />
+                    {request.payment_status === "unpaid" ? (
+                      <p className="mt-1 text-[10px] font-semibold text-amber-700">Payment pending</p>
+                    ) : null}
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 text-[10px] text-muted">
                     {timeAgo(request.created_at)}
@@ -308,7 +311,12 @@ export default async function PrintPulsePage({
                       Available at {getPrintLocationLabel(request.print_location)}
                     </p>
                   </div>
-                  <PrintStatusBadge status={request.status} />
+                  <div className="flex flex-col items-end gap-1">
+                    <PrintStatusBadge status={request.status} />
+                    {request.payment_status === "unpaid" ? (
+                      <span className="text-[10px] font-semibold text-amber-700">Payment pending</span>
+                    ) : null}
+                  </div>
                 </div>
                 <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted">
                   <span>{request.pages} pages</span>
