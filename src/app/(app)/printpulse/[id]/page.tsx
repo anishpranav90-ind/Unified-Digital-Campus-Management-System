@@ -25,6 +25,7 @@ import { getPrintLocationLabel } from "@/lib/print-locations";
 import { PaymentSelection } from "@/components/payments/payment-selection";
 import { PrintCounterVerificationForm } from "@/components/payments/print-counter-verification-form";
 import { PaidPrintUploadForm } from "@/components/payments/paid-print-upload-form";
+import { getPaymentMethodAvailability } from "@/lib/payments/config";
 
 export const metadata = { title: "Print job" };
 
@@ -238,6 +239,7 @@ export default async function PrintRequestPage({
               amountPaise={Math.round(Number(request.estimated_cost) * 100)}
               orderNumber={request.request_number}
               allowedMethods={[request.payment_option]}
+              availability={getPaymentMethodAvailability()}
             />
           ) : null}
           {request.upload_after_payment &&

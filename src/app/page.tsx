@@ -10,6 +10,7 @@ import {
   Printer,
   ShieldCheck,
   Trophy,
+  Utensils,
   UsersRound,
   Wrench,
   Zap,
@@ -24,6 +25,7 @@ const ICONS = {
   CalendarDays: CalendarCheck2,
   MessagesSquare,
   Trophy,
+  Utensils,
   Wrench,
 } as const;
 
@@ -183,7 +185,7 @@ export default async function LandingPage() {
         <div className="max-w-2xl">
           <Badge tone="orange">The campus problem</Badge>
           <h2 className="mt-4 text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
-            Five essential services. Five disconnected systems.
+            Six essential services. One connected campus.
           </h2>
           <p className="mt-3 text-sm leading-relaxed text-muted">
             Students lose time to queues and missed notices. Faculty duplicate updates across channels.

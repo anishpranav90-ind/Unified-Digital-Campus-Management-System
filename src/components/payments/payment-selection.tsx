@@ -11,6 +11,7 @@ import {
   type PaymentActionState,
 } from "@/lib/actions/payments";
 import type { PaymentMethod } from "@/types";
+import type { PaymentMethodAvailability } from "@/lib/payments/config";
 import { formatCurrency } from "@/lib/utils";
 
 type RazorpayOptions = {
@@ -50,12 +51,14 @@ export function PaymentSelection({
   amountPaise,
   orderNumber,
   allowedMethods,
+  availability,
 }: {
   module: "printpulse" | "ecafe";
   entityId: string;
   amountPaise: number;
   orderNumber: string;
   allowedMethods?: PaymentMethod[];
+  availability?: PaymentMethodAvailability;
 }) {
   const router = useRouter();
   const [state, formAction, pending] = useActionState<PaymentActionState, FormData>(
@@ -120,21 +123,28 @@ export function PaymentSelection({
       </div>
 
       <div className="grid gap-2 sm:grid-cols-3">
-        {methods.map((method) => (
-          <form action={formAction} key={method.value}>
-            <input type="hidden" name="module" value={module} />
-            <input type="hidden" name="entity_id" value={entityId} />
-            <input type="hidden" name="method" value={method.value} />
+        {methods.map((method) => {
+          const status = availability?.[method.value];
+          return (
+            <form action={formAction} key={method.value}>
+              <input type="hidden" name="module" value={module} />
+              <input type="hidden" name="entity_id" value={entityId} />
+              <input type="hidden" name="method" value={method.value} />
             <button
               type="submit"
-              disabled={pending || checkoutPending}
-              className="focus-ring h-full w-full rounded-xl border border-line p-3 text-left transition-colors hover:border-brand-blue hover:bg-blue-50/50 disabled:opacity-60"
+              disabled={pending || checkoutPending || status?.available === false}
+              title={status?.available === false ? status.reason : undefined}
+              className="focus-ring h-full w-full rounded-xl border border-line p-3 text-left transition-colors hover:border-brand-blue hover:bg-blue-50/50 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <span className="block text-xs font-semibold text-ink">{method.label}</span>
               <span className="mt-1 block text-[10px] text-muted">{method.detail}</span>
+              {status?.available === false ? (
+                <span className="mt-2 block text-[10px] font-medium text-amber-700">{status.reason}</span>
+              ) : null}
             </button>
-          </form>
-        ))}
+            </form>
+          );
+        })}
       </div>
 
       {state.error ? <Alert tone="error">{state.error}</Alert> : null}

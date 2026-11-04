@@ -7,6 +7,7 @@ import { PaymentSelection } from "@/components/payments/payment-selection";
 import { Badge, Card, CardHeader, PageHeader } from "@/components/ui";
 import { formatCurrency, formatDateTime } from "@/lib/utils";
 import { isDemoMode } from "@/lib/env";
+import { getPaymentMethodAvailability } from "@/lib/payments/config";
 
 export const metadata = { title: "e-Cafe order" };
 
@@ -57,6 +58,7 @@ export default async function EcafeOrderPage({ params }: PageProps<"/ecafe/order
           entityId={order.id}
           amountPaise={order.amount_paise}
           orderNumber={order.order_number}
+          availability={getPaymentMethodAvailability()}
         />
       ) : order.status === "VERIFIED_AND_QUEUED" ? (
         <p className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-xs text-emerald-800">
