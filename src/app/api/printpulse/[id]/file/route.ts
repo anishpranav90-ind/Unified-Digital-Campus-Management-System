@@ -11,9 +11,6 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   if (!printRequest?.file_path) {
     return NextResponse.json({ error: "Document not available." }, { status: 404 });
   }
-  if (profile.role !== "student" && printRequest.payment_status === "unpaid") {
-    return NextResponse.json({ error: "Payment must be verified before print staff can access this document." }, { status: 403 });
-  }
 
   const url = await getPrintFileUrl(profile, printRequest.file_path);
   if (!url) return NextResponse.json({ error: "Could not create a signed URL." }, { status: 500 });

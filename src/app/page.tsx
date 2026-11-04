@@ -4,7 +4,6 @@ import {
   BellRing,
   CalendarCheck2,
   CheckCircle2,
-  Coffee,
   GraduationCap,
   LockKeyhole,
   MessagesSquare,
@@ -26,7 +25,6 @@ const ICONS = {
   MessagesSquare,
   Trophy,
   Wrench,
-  Coffee,
 } as const;
 
 const PROBLEMS = [
@@ -185,7 +183,7 @@ export default async function LandingPage() {
         <div className="max-w-2xl">
           <Badge tone="orange">The campus problem</Badge>
           <h2 className="mt-4 text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
-            Six essential services. One connected campus.
+            Five essential services. Five disconnected systems.
           </h2>
           <p className="mt-3 text-sm leading-relaxed text-muted">
             Students lose time to queues and missed notices. Faculty duplicate updates across channels.
@@ -209,7 +207,7 @@ export default async function LandingPage() {
             <div className="max-w-2xl">
               <Badge tone="blue">The solution</Badge>
               <h2 className="mt-4 text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
-                Six modules. One shared design system and database.
+                Five modules. One shared design system and database.
               </h2>
               <p className="mt-3 text-sm leading-relaxed text-muted">
                 Each module solves one campus workflow. Together they give every role a single, consistent
@@ -230,12 +228,13 @@ export default async function LandingPage() {
                 "bg-teal-50 text-brand-teal",
                 "bg-amber-50 text-amber-600",
                 "bg-emerald-50 text-emerald-600",
-                "bg-orange-50 text-brand-orange",
               ];
               return (
                 <div
                   key={module.key}
-                  className="group rounded-2xl border border-line bg-white p-5 shadow-card transition-shadow hover:shadow-lift"
+                  className={`group rounded-2xl border border-line bg-white p-5 shadow-card transition-shadow hover:shadow-lift ${
+                    index === 4 ? "sm:col-span-2 lg:col-span-1" : ""
+                  }`}
                 >
                   <div className={`inline-flex rounded-xl p-2.5 ${ACCENTS[index]}`}>
                     <Icon className="h-5 w-5" />
@@ -372,7 +371,7 @@ using (public.is_group_member(group_id));`}
           <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">{APP_TAGLINE}</h2>
           <p className="mx-auto mt-3 max-w-xl text-sm text-slate-300">
             {demo
-              ? "Open the demo accounts to browse all six modules as a student, faculty member or administrator."
+              ? "Open the demo accounts to browse all five modules as a student, faculty member or administrator."
               : "Sign in with your campus account to reach your timetable, print queue, groups and complaints."}
           </p>
           <div className="mt-7 flex flex-wrap justify-center gap-3">

@@ -26,7 +26,7 @@ export default async function LoginPage() {
         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-orange">Welcome back</p>
         <h2 className="mt-1 text-2xl font-semibold tracking-tight text-ink">Sign in to your campus</h2>
         <p className="mt-1.5 text-sm text-muted">
-          Use your college account to open all six UniSync modules.
+          Use your college account to open all five UniSync modules.
         </p>
       </div>
 

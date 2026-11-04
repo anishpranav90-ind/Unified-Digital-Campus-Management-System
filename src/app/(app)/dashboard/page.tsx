@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { cookies } from "next/headers";
 import {
   ArrowRight,
   CalendarClock,
@@ -35,15 +34,14 @@ import { ModuleGrid } from "@/components/dashboard/module-grid";
 import { AnnouncementsList } from "@/components/dashboard/announcements-list";
 import { ScheduleList } from "@/components/dashboard/schedule-list";
 import { ColumnChart, DonutChart, Legend } from "@/components/dashboard/charts";
-import { getIntlLocale, getLanguageCode, translate, type LanguageCode } from "@/lib/i18n";
 
 export const metadata = { title: "Dashboard" };
 
-function greeting(language: LanguageCode) {
+function greeting() {
   const hour = new Date().getHours();
-  if (hour < 12) return translate(language, "Good morning");
-  if (hour < 17) return translate(language, "Good afternoon");
-  return translate(language, "Good evening");
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  return "Good evening";
 }
 
 function NotificationMini({ notifications }: { notifications: AppNotification[] }) {
@@ -75,8 +73,8 @@ function NotificationMini({ notifications }: { notifications: AppNotification[] 
   );
 }
 
-function PageIntro({ profile, language }: { profile: Profile; language: LanguageCode }) {
-  const dateLabel = new Date().toLocaleDateString(getIntlLocale(language), {
+function PageIntro({ profile }: { profile: Profile }) {
+  const dateLabel = new Date().toLocaleDateString("en-IN", {
     weekday: "long",
     day: "numeric",
     month: "long",
@@ -87,14 +85,14 @@ function PageIntro({ profile, language }: { profile: Profile; language: Language
       <div>
         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-orange">{dateLabel}</p>
         <h1 className="mt-1 text-xl font-semibold tracking-tight text-ink sm:text-2xl">
-          {greeting(language)}, {firstName(profile.full_name)}
+          {greeting()}, {firstName(profile.full_name)}
         </h1>
         <p className="mt-1 text-sm text-muted">
           {profile.role === "student"
-            ? translate(language, "Here is everything happening on campus today.")
+            ? "Here is everything happening on campus today."
             : profile.role === "faculty"
-              ? translate(language, "Your classes, mentorships and campus updates in one place.")
-              : translate(language, "Live campus operations and service health.")}
+              ? "Your classes, mentorships and campus updates in one place."
+              : "Live campus operations and service health."}
         </p>
       </div>
       <div className="flex flex-wrap gap-2">
@@ -132,15 +130,14 @@ function PageIntro({ profile, language }: { profile: Profile; language: Language
 }
 
 export default async function DashboardPage() {
-  const [profile, cookieStore] = await Promise.all([requireProfile(), cookies()]);
-  const language = getLanguageCode(cookieStore.get("unisync-language")?.value);
+  const profile = await requireProfile();
 
-  if (profile.role === "admin") return <AdminDashboard profile={profile} language={language} />;
-  if (profile.role === "faculty") return <FacultyDashboard profile={profile} language={language} />;
-  return <StudentDashboard profile={profile} language={language} />;
+  if (profile.role === "admin") return <AdminDashboard profile={profile} />;
+  if (profile.role === "faculty") return <FacultyDashboard profile={profile} />;
+  return <StudentDashboard profile={profile} />;
 }
 
-async function StudentDashboard({ profile, language }: { profile: Profile; language: LanguageCode }) {
+async function StudentDashboard({ profile }: { profile: Profile }) {
   const [announcements, notifications, timetable, prints, queue, complaints, deadlines, exams] =
     await Promise.all([
       listAnnouncements(profile, 3),
@@ -158,8 +155,7 @@ async function StudentDashboard({ profile, language }: { profile: Profile; langu
     .filter((entry) => entry.day_of_week === today)
     .sort((a, b) => a.start_time.localeCompare(b.start_time));
   const activePrints = prints.filter((request) =>
-    ["submitted", "queued", "processing", "ready"].includes(request.status) &&
-    (request.payment_status === "paid" || request.payment_status === "not_required"),
+    ["submitted", "queued", "processing", "ready"].includes(request.status),
   );
   const openComplaints = complaints.filter((request) => !["resolved", "rejected"].includes(request.status));
   const nextExam = exams[0];
@@ -168,7 +164,7 @@ async function StudentDashboard({ profile, language }: { profile: Profile; langu
 
   return (
     <div>
-      <PageIntro profile={profile} language={language} />
+      <PageIntro profile={profile} />
 
       <ModuleGrid
         counts={{
@@ -430,7 +426,7 @@ async function StudentDashboard({ profile, language }: { profile: Profile; langu
   );
 }
 
-async function FacultyDashboard({ profile, language }: { profile: Profile; language: LanguageCode }) {
+async function FacultyDashboard({ profile }: { profile: Profile }) {
   const [announcements, timetable, groups, maintenance, deadlines, unreadMessages] = await Promise.all([
     listAnnouncements(profile, 3),
     getTimetable(profile),
@@ -448,7 +444,7 @@ async function FacultyDashboard({ profile, language }: { profile: Profile; langu
 
   return (
     <div>
-      <PageIntro profile={profile} language={language} />
+      <PageIntro profile={profile} />
 
       <ModuleGrid
         counts={{
@@ -668,7 +664,7 @@ async function FacultyDashboard({ profile, language }: { profile: Profile; langu
   );
 }
 
-async function AdminDashboard({ profile, language }: { profile: Profile; language: LanguageCode }) {
+async function AdminDashboard({ profile }: { profile: Profile }) {
   const [stats, announcements] = await Promise.all([getAdminStats(), listAnnouncements(profile, 3)]);
 
   const printData = Object.entries(stats.printStatus).map(([name, value]) => ({ name, value }));
@@ -679,7 +675,7 @@ async function AdminDashboard({ profile, language }: { profile: Profile; languag
 
   return (
     <div>
-      <PageIntro profile={profile} language={language} />
+      <PageIntro profile={profile} />
 
       <ModuleGrid
         counts={{

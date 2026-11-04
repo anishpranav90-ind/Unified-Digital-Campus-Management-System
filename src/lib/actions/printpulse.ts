@@ -4,17 +4,12 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { FormState } from "@/lib/action-state";
 import { requireProfile } from "@/lib/session";
-import {
-  printRequestSchema,
-  printSettingsSchema,
-  printStatusSchema,
-} from "@/lib/validations";
+import { printRequestSchema, printSettingsSchema, printStatusSchema } from "@/lib/validations";
 import {
   cancelPrintRequest,
   createPrintRequest,
   updatePrintRequestStatus,
   updatePrintSettings,
-  verifyPrintPayment,
 } from "@/lib/data/printpulse";
 
 export async function createPrintRequestAction(_prev: FormState, formData: FormData): Promise<FormState> {
@@ -27,7 +22,6 @@ export async function createPrintRequestAction(_prev: FormState, formData: FormD
     copies: formData.get("copies"),
     color_mode: formData.get("color_mode"),
     sides: formData.get("sides"),
-    payment_method: formData.get("payment_method"),
     priority: formData.get("priority") ?? "normal",
     notes: formData.get("notes") ?? "",
   });
@@ -46,7 +40,6 @@ export async function createPrintRequestAction(_prev: FormState, formData: FormD
       copies: parsed.data.copies,
       color_mode: parsed.data.color_mode,
       sides: parsed.data.sides,
-      payment_method: parsed.data.payment_method,
       priority: parsed.data.priority,
       notes: parsed.data.notes || null,
     },
@@ -57,30 +50,6 @@ export async function createPrintRequestAction(_prev: FormState, formData: FormD
   revalidatePath("/printpulse");
   revalidatePath("/dashboard");
   redirect(`/printpulse/${result.id}`);
-}
-
-export async function verifyPrintPaymentAction(_prev: FormState, formData: FormData): Promise<FormState> {
-  const profile = await requireProfile();
-  const id = String(formData.get("id") ?? "");
-  const paymentMethod = formData.get("payment_method");
-  if (paymentMethod !== "cash" && paymentMethod !== "upi") {
-    return { error: "Choose a valid payment method." };
-  }
-  if (paymentMethod === "upi") {
-    return { error: "Razorpay verifies online payments automatically. Manual verification is only for cash." };
-  }
-
-  const result = await verifyPrintPayment(
-    profile,
-    id,
-    paymentMethod,
-    null,
-  );
-  if (!result.ok) return { error: result.error };
-  revalidatePath("/printpulse");
-  revalidatePath(`/printpulse/${id}`);
-  revalidatePath("/dashboard");
-  return { success: `Payment verified. ${result.requestNumber} is now queued for printing.` };
 }
 
 export async function cancelPrintRequestAction(formData: FormData) {

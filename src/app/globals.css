@@ -9,10 +9,10 @@
   --color-brand-orange-dark: #ea580c;
   --color-brand-blue: #2563eb;
   --color-brand-teal: #14b8a6;
-  --color-ink: var(--ink);
-  --color-muted: var(--muted);
-  --color-line: var(--line);
-  --color-canvas: var(--canvas);
+  --color-ink: #0f172a;
+  --color-muted: #64748b;
+  --color-line: #e2e8f0;
+  --color-canvas: #f6f8fb;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px -16px rgba(15, 23, 42, 0.16);
@@ -20,26 +20,12 @@
 }
 
 :root {
-  --canvas: #f6f8fb;
-  --ink: #0f172a;
-  --muted: #64748b;
-  --line: #e2e8f0;
-  --background: var(--canvas);
-  --foreground: var(--ink);
-}
-
-.dark {
-  color-scheme: dark;
-  --canvas: #071527;
-  --ink: #e2e8f0;
-  --muted: #a3b2c7;
-  --line: #263c56;
-  --background: var(--canvas);
-  --foreground: var(--ink);
+  --background: #f6f8fb;
+  --foreground: #0f172a;
 }
 
 * {
-  border-color: var(--line);
+  border-color: #e2e8f0;
 }
 
 html {
@@ -50,54 +36,6 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
-}
-
-.dark [class~="bg-white"],
-.dark [class~="bg-white/90"] {
-  background-color: #10243e;
-}
-
-.dark [class~="bg-slate-50"],
-.dark [class~="bg-slate-100"] {
-  background-color: #142a45;
-}
-
-.dark [class~="bg-slate-200"] {
-  background-color: #334a65;
-}
-
-.dark [class~="text-slate-900"],
-.dark [class~="text-slate-800"],
-.dark [class~="text-slate-700"],
-.dark [class~="text-slate-600"] {
-  color: #d5deea;
-}
-
-.dark [class~="text-slate-500"],
-.dark [class~="text-slate-400"] {
-  color: #a3b2c7;
-}
-
-.dark [class~="border-slate-100"],
-.dark [class~="border-slate-200"] {
-  border-color: var(--line);
-}
-
-.dark [class~="hover:bg-slate-50"]:hover,
-.dark [class~="hover:bg-slate-100"]:hover {
-  background-color: #1b3552;
-}
-
-.theme-icon-dark {
-  display: none;
-}
-
-.dark .theme-icon-light {
-  display: none;
-}
-
-.dark .theme-icon-dark {
-  display: block;
 }
 
 ::selection {

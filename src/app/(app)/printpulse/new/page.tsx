@@ -3,8 +3,6 @@ import { ArrowLeft } from "lucide-react";
 import { redirect } from "next/navigation";
 import { requireProfile } from "@/lib/session";
 import { getPrintSettings } from "@/lib/data/printpulse";
-import { getRazorpayPublicKey } from "@/lib/razorpay";
-import { isDemoMode } from "@/lib/env";
 import { PageHeader } from "@/components/ui";
 import { PrintRequestForm } from "./print-request-form";
 
@@ -26,13 +24,9 @@ export default async function NewPrintRequestPage() {
       <PageHeader
         eyebrow="PrintPulse"
         title="New print request"
-        description="DRAFT · Upload a PDF, choose print options and payment method. Requests stay staged until payment is verified."
+        description="Upload a PDF, choose your print options and join the digital queue."
       />
-      <PrintRequestForm
-        settings={settings}
-        razorpayKeyId={isDemoMode() ? "" : getRazorpayPublicKey()}
-        demo={isDemoMode()}
-      />
+      <PrintRequestForm settings={settings} />
     </div>
   );
 }

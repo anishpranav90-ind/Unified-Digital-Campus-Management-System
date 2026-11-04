@@ -1,17 +1,16 @@
 # UniSync
 
-A unified campus operations platform for print jobs, timetables, mentor groups, opportunities, maintenance complaints, cafe orders and administrator oversight. Built with Next.js 16 (App Router), TypeScript, Tailwind CSS 4 and Supabase (PostgreSQL, Auth, Storage, Realtime).
+A unified campus operations platform for print jobs, timetables, mentor groups, opportunities, maintenance complaints and administrator oversight. Built with Next.js 16 (App Router), TypeScript, Tailwind CSS 4 and Supabase (PostgreSQL, Auth, Storage, Realtime).
 
-The six modules:
+The five modules:
 
 | Module | What it does |
 |---|---|
-| **PrintPulse** | Private PDF staging, live pricing, amount-prefilled UPI QR or cash authorization QR, staff-verified payment and guarded print queue |
+| **PrintPulse** | PDF upload, DB-authoritative pricing, live queue position, estimated wait and staff-managed statuses |
 | **TimeGrid** | Weekly timetable grid, exam schedule, correction requests and conflict-safe admin editing |
 | **MentorLoop** | Mentor groups, membership controls, realtime group chat and read receipts |
 | **Opportune** | Interest-aware opportunity discovery, bookmarks, staff publishing and safe external apply links |
 | **Fixora** | Maintenance reporting, status history, comments, priority and assignment workflow |
-| **e-cafe** | Today's veg and non-veg menu, quantity selection, UPI payment QR and cash bill receipts |
 
 Plus a unified dashboard for every role, notifications, global search, an administrator console with role management and an append-only audit trail, and public privacy and terms pages.
 
@@ -80,10 +79,6 @@ or paste the migrations into the SQL editor **in filename order**:
 4. `supabase/migrations/20261023000400_storage_realtime.sql` — private storage buckets, storage policies, realtime publication
 5. `supabase/migrations/20261024000100_profile_guard_session_user.sql` — fixes the role guard so a `SECURITY DEFINER` trigger cannot be bypassed
 6. `supabase/migrations/20261024000200_print_settings_singleton.sql` — collapses duplicate print settings and enforces a single row
-7. `supabase/migrations/20261104000100_add_cups_job_id.sql` — records CUPS job IDs to prevent duplicate dispatch
-8. `supabase/migrations/20261104000200_add_print_location.sql` and `20261104000300_update_print_locations.sql` — add and normalize print destinations
-9. `supabase/migrations/20261105000100_print_payment_guard.sql` — stages unpaid print requests, requires staff verification before queueing, gates staff document access and excludes unpaid requests from queue positions
-10. `supabase/migrations/20261105000200_razorpay_print_orders.sql` — stores server-only Razorpay order mappings
 
 Then apply the reference data (already included in `npm run db:apply`):
 
@@ -142,13 +137,9 @@ Demo mode turns off automatically once both Supabase keys are present. Set `NEXT
 |---|---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | Production | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Production | Public anon key (RLS still applies) |
-| `SUPABASE_SERVICE_ROLE_KEY` | Production payment verification / seeder | Server-side service-role operations; never expose to the client |
+| `SUPABASE_SERVICE_ROLE_KEY` | Seeder only | Local seeding over the Supabase admin API; never expose to the client |
 | `SUPABASE_DB_URL` | Scripts only | Direct Postgres URL for `db:apply` and the database transport of `seed:demo` |
 | `NEXT_PUBLIC_APP_URL` | Production | Origin used for auth redirects |
-| `NEXT_PUBLIC_ECAFE_UPI_ID` | e-cafe UPI | Cafe's public UPI ID (VPA), used to create amount-prefilled payment QR codes |
-| `RAZORPAY_KEY_ID` | PrintPulse UPI | Razorpay Checkout key ID (public identifier, kept server-configured) |
-| `RAZORPAY_KEY_SECRET` | PrintPulse UPI | Razorpay API and checkout signature secret; server only |
-| `RAZORPAY_WEBHOOK_SECRET` | PrintPulse UPI | Secret configured for the Razorpay webhook at `/api/webhooks/razorpay`; server only |
 | `NEXT_PUBLIC_DEMO_MODE` | No | `true` forces demo, `false` requires Supabase, blank auto-detects |
 | `DEMO_PASSWORD` | No | Demo account password (default `unisync123`) |
 | `CUPS_SJIT_GIRLS_XEROX_1_URI` | CUPS only | Server-side IPP/IPPS URI for SJIT Girls Xerox-1 |
@@ -160,10 +151,6 @@ Demo mode turns off automatically once both Supabase keys are present. Set `NEXT
 | `CUPS_REQUESTING_USER` | No | IPP job owner label (default `unisync`) |
 
 Never prefix a secret with `NEXT_PUBLIC_`. `.env*` is gitignored; only `.env.example` is tracked.
-
-The e-cafe menu is currently defined in `src/lib/data/ecafe.ts`. Its cart and receipt flow runs in the browser; it does not submit orders to a backend or verify payments. Configure `NEXT_PUBLIC_ECAFE_UPI_ID` with the cafe's real VPA before enabling UPI checkout in production.
-
-PrintPulse stages PDFs in private storage and marks new requests unpaid. Razorpay Checkout creates an order server-side using the database-calculated amount; students pay with a UPI app or scan the Razorpay QR shown on desktop. The app verifies the checkout signature and confirms the captured payment with Razorpay before queueing the job. A signed `payment.captured` webhook at `/api/webhooks/razorpay` provides a second, retryable confirmation path. Cash bills have a request QR that print desk staff scan to confirm collection. Both app and database guards reject premature queueing; staff file access is blocked until payment is verified. Apply both PrintPulse payment migrations, set the three Razorpay variables plus `SUPABASE_SERVICE_ROLE_KEY`, and configure a Razorpay webhook for `payment.captured` to the public webhook URL before enabling UPI.
 
 ---
 
@@ -201,7 +188,7 @@ Verify the policies against a seeded project:
 npm run test:rls
 ```
 
-The script signs in as four accounts and checks cross-user print jobs, complaints, group messages, role escalation, audit access, duplicate bookmarks and anonymous reads. It creates and removes a temporary group. A live Supabase project is required; it cannot run in demo mode. This suite has been run against a live Supabase project with the migrations applied and the demo dataset seeded: **17 passed, 0 failed**.
+The script signs in as four accounts and checks cross-user print jobs, complaints, group messages, role escalation, audit access, duplicate bookmarks and anonymous reads. It creates and removes a temporary group. A live Supabase project is required; it cannot run in demo mode. This suite has been run against a live project with all five migrations applied and the demo dataset seeded: **17 passed, 0 failed**.
 
 ---
 
@@ -209,12 +196,11 @@ The script signs in as four accounts and checks cross-user print jobs, complaint
 
 Manual flows used during development:
 
-1. **Student** — log in, stage a PrintPulse PDF and confirm unpaid requests stay out of the queue; pay by UPI or choose cash; browse e-cafe, adjust quantities and create a cash bill or UPI QR; save an opportunity; create a maintenance ticket; send a group message; request a timetable correction.
-2. **Print desk** — open a pending PrintPulse request, verify the UPI transaction reference or confirm cash collection, then confirm it enters the queue; ensure processing is unavailable before verification.
-3. **Faculty** — view today's classes; publish an announcement; create a mentor group; update a verified print job; update a complaint assigned to them.
-4. **Admin** — see campus stats; edit print pricing; add a timetable slot and confirm a classroom conflict is rejected; publish an opportunity; assign/resolve a complaint; change a user role; inspect audit entries.
-5. **Security** — sign out and hit `/dashboard`, `/admin`, `/fixora` directly; confirm redirects. Run `npm run test:rls`.
-6. **Responsive** — check the mobile navigation drawer and cards at 375 px and desktop at 1280 px.
+1. **Student** — log in, view dashboard, upload `demo-document.pdf` in PrintPulse, see cost/queue; save an opportunity; create a maintenance ticket; send a group message; request a timetable correction.
+2. **Faculty** — view today's classes; publish an announcement; create a mentor group; change a print job to processing; update a complaint assigned to them.
+3. **Admin** — see campus stats; edit print pricing; add a timetable slot and confirm a classroom conflict is rejected; publish an opportunity; assign/resolve a complaint; change a user role; inspect audit entries.
+4. **Security** — sign out and hit `/dashboard`, `/admin`, `/fixora` directly; confirm redirects. Run `npm run test:rls`.
+5. **Responsive** — check the mobile navigation drawer and cards at 375 px and desktop at 1280 px.
 
 Automated checks:
 
@@ -271,7 +257,7 @@ Supabase free-tier projects are resource-constrained and can be paused after ina
 
 ## Integrations and honest limitations
 
-- **Printing is simulated by default.** Each new request selects one of five Xerox locations. To enable CUPS, configure the five server-only location-specific URIs (`ipp://` or preferably `ipps://`), plus `CUPS_USERNAME` and `CUPS_PASSWORD` when the server requires Basic Auth. Credentials are only accepted with IPPS. Then select **CUPS / IPP** in the PrintPulse admin settings. UniSync routes a verified PDF and its print options to the selected location when staff move it to *processing*, then stores the CUPS job ID to prevent accidental resubmission. CUPS acceptance is not proof that paper finished printing; staff must verify the queue/output before marking a job *ready*. Run the print migrations through `20261105000100_print_payment_guard.sql` before enabling CUPS. The application host must have network access to all configured CUPS queues; configure and test against the actual printers before production use.
+- **Printing is simulated by default.** Each new request selects one of five Xerox locations. To enable CUPS, configure the five server-only location-specific URIs (`ipp://` or preferably `ipps://`), plus `CUPS_USERNAME` and `CUPS_PASSWORD` when the server requires Basic Auth. Credentials are only accepted with IPPS. Then select **CUPS / IPP** in the PrintPulse admin settings. UniSync routes each PDF and its print options to the selected location when staff move it to *processing*, then stores the CUPS job ID to prevent accidental resubmission. CUPS acceptance is not proof that paper finished printing; staff must verify the queue/output before marking a job *ready*. Run migrations `20261104000100_add_cups_job_id.sql`, `20261104000200_add_print_location.sql`, and `20261104000300_update_print_locations.sql` before enabling CUPS. The application host must have network access to all configured CUPS queues; configure and test against the actual printers before production use.
 - **PDF handling is metadata-only.** The upload form validates MIME type and size; the app does not render or parse PDF contents, so page count is entered by the student and capped by settings. Before charging real money, add server-side PDF parsing and verify the page count.
 - **Push notifications and fee payments are not built.** FCM and Razorpay were listed as optional in the brief and are intentionally omitted rather than half-wired. In-app notifications are fully implemented. A payment provider would need order creation, signature verification and reconciliation before any fee feature ships.
 - **Demo mode is in-memory.** It exists for evaluation and preview deployments; do not treat it as persistent storage.

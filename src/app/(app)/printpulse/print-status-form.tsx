@@ -17,18 +17,12 @@ export function PrintStatusForm({ request }: { request: PrintRequest }) {
       {state.success ? <Alert tone="success">{state.success}</Alert> : null}
       <input type="hidden" name="id" value={request.id} />
       <Field label="Job status" htmlFor="status" required>
-        <Select
-          id="status"
-          name="status"
-          defaultValue={request.payment_status === "unpaid" && request.status !== "submitted" ? "submitted" : request.status}
-        >
-          {Object.entries(PRINT_STATUS_META)
-            .filter(([value]) => request.payment_status !== "unpaid" || ["submitted", "cancelled", "failed"].includes(value))
-            .map(([value, meta]) => (
+        <Select id="status" name="status" defaultValue={request.status}>
+          {Object.entries(PRINT_STATUS_META).map(([value, meta]) => (
             <option key={value} value={value}>
               {meta.label}
             </option>
-            ))}
+          ))}
         </Select>
       </Field>
       <Field label="Note for the student" htmlFor="note" hint="Optional, shown with the notification">
