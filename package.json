@@ -12,6 +12,7 @@
     "test:rls": "node --env-file=.env.local scripts/test-rls.mjs",
     "test:routes": "node scripts/smoke-routes.mjs",
     "test:details": "node scripts/smoke-details.mjs",
+    "test:razorpay-webhook": "node --test scripts/test-razorpay-webhook.mjs",
     "reminders": "node --env-file=.env.local scripts/deadline-reminders.mjs"
   },
   "dependencies": {

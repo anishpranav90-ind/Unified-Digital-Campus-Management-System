@@ -80,6 +80,11 @@ or paste the migrations into the SQL editor **in filename order**:
 5. `supabase/migrations/20261024000100_profile_guard_session_user.sql` — fixes the role guard so a `SECURITY DEFINER` trigger cannot be bypassed
 6. `supabase/migrations/20261024000200_print_settings_singleton.sql` — collapses duplicate print settings and enforces a single row
 
+The payment workflow adds:
+
+7. `supabase/migrations/20261104000400_guarded_payments_ecafe.sql` — guarded PrintPulse/e-Cafe payment records and queue state
+8. `supabase/migrations/20261104000500_razorpay_webhook_idempotency.sql` — Razorpay payment attempts, event idempotency, and atomic settlement
+
 Then apply the reference data (already included in `npm run db:apply`):
 
 ```bash
@@ -137,9 +142,12 @@ Demo mode turns off automatically once both Supabase keys are present. Set `NEXT
 |---|---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | Production | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Production | Public anon key (RLS still applies) |
-| `SUPABASE_SERVICE_ROLE_KEY` | Seeder only | Local seeding over the Supabase admin API; never expose to the client |
+| `SUPABASE_SERVICE_ROLE_KEY` | Webhooks/seeder | Server-side Razorpay settlement and local seeding; never expose to the client |
 | `SUPABASE_DB_URL` | Scripts only | Direct Postgres URL for `db:apply` and the database transport of `seed:demo` |
 | `NEXT_PUBLIC_APP_URL` | Production | Origin used for auth redirects |
+| `RAZORPAY_KEY_ID` | Razorpay Checkout | Server-side API key ID |
+| `RAZORPAY_KEY_SECRET` | Razorpay Checkout | Server-side API secret; never expose to the client |
+| `RAZORPAY_WEBHOOK_SECRET` | Razorpay webhooks | Secret configured for the Razorpay webhook endpoint; server-side only |
 | `NEXT_PUBLIC_DEMO_MODE` | No | `true` forces demo, `false` requires Supabase, blank auto-detects |
 | `DEMO_PASSWORD` | No | Demo account password (default `unisync123`) |
 | `CUPS_SJIT_GIRLS_XEROX_1_URI` | CUPS only | Server-side IPP/IPPS URI for SJIT Girls Xerox-1 |
@@ -151,6 +159,14 @@ Demo mode turns off automatically once both Supabase keys are present. Set `NEXT
 | `CUPS_REQUESTING_USER` | No | IPP job owner label (default `unisync`) |
 
 Never prefix a secret with `NEXT_PUBLIC_`. `.env*` is gitignored; only `.env.example` is tracked.
+
+### Razorpay webhook deployment
+
+- Configure the Razorpay Dashboard webhook URL as `https://YOUR_PRODUCTION_DOMAIN/api/webhooks/razorpay`.
+- Subscribe to `payment.authorized`, `payment.captured`, `payment.failed`, and `order.paid`.
+- In Vercel, add `RAZORPAY_WEBHOOK_SECRET` with the exact secret configured for that webhook. Also configure `SUPABASE_SERVICE_ROLE_KEY`, `RAZORPAY_KEY_ID`, and `RAZORPAY_KEY_SECRET` as server-only variables for the corresponding deployment environments. Do not use a `NEXT_PUBLIC_` prefix.
+- Apply pending database migrations before enabling webhook delivery. Redeploy the Vercel project after changing environment variables so the new deployment receives them.
+- Run `npm run test:razorpay-webhook` for request validation and handler tests. A Razorpay test-mode payment and a connected Supabase project are still required to verify end-to-end event settlement.
 
 ---
 
