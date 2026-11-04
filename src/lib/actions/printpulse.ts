@@ -16,6 +16,7 @@ export async function createPrintRequestAction(_prev: FormState, formData: FormD
   const profile = await requireProfile();
   const parsed = printRequestSchema.safeParse({
     document_name: formData.get("document_name"),
+    print_location: formData.get("print_location"),
     pages: formData.get("pages"),
     page_range: formData.get("page_range") ?? "",
     copies: formData.get("copies"),
@@ -33,6 +34,7 @@ export async function createPrintRequestAction(_prev: FormState, formData: FormD
     profile,
     {
       document_name: parsed.data.document_name,
+      print_location: parsed.data.print_location,
       pages: parsed.data.pages,
       page_range: parsed.data.page_range || null,
       copies: parsed.data.copies,
@@ -77,7 +79,11 @@ export async function updatePrintStatusAction(_prev: FormState, formData: FormDa
   revalidatePath("/printpulse");
   revalidatePath(`/printpulse/${id}`);
   revalidatePath("/dashboard");
-  return { success: "Print job updated and the student was notified." };
+  return {
+    success: result.printerJobId
+      ? `Submitted to CUPS as job ${result.printerJobId}. Confirm the output before marking it ready.`
+      : "Print job updated and the student was notified.",
+  };
 }
 
 export async function updatePrintSettingsAction(_prev: FormState, formData: FormData): Promise<FormState> {
@@ -89,10 +95,11 @@ export async function updatePrintSettingsAction(_prev: FormState, formData: Form
     color_double: formData.get("color_double"),
     avg_processing_minutes: formData.get("avg_processing_minutes"),
     max_pages_per_job: formData.get("max_pages_per_job"),
+    printer_mode: formData.get("printer_mode"),
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Check the pricing values." };
   const result = await updatePrintSettings(profile, parsed.data);
   if (!result.ok) return { error: result.error };
   revalidatePath("/printpulse");
-  return { success: "Print pricing and queue timings updated." };
+  return { success: "Print pricing, queue timings, and printer mode updated." };
 }

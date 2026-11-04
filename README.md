@@ -142,7 +142,13 @@ Demo mode turns off automatically once both Supabase keys are present. Set `NEXT
 | `NEXT_PUBLIC_APP_URL` | Production | Origin used for auth redirects |
 | `NEXT_PUBLIC_DEMO_MODE` | No | `true` forces demo, `false` requires Supabase, blank auto-detects |
 | `DEMO_PASSWORD` | No | Demo account password (default `unisync123`) |
-| `PRINTER_MODE` | No | `simulated` (default) or `cups` |
+| `CUPS_SJIT_GIRLS_XEROX_1_URI` | CUPS only | Server-side IPP/IPPS URI for SJIT Girls Xerox-1 |
+| `CUPS_SJIT_BOYS_XEROX_1_URI` | CUPS only | Server-side IPP/IPPS URI for SJIT-Boys Xerox-1 |
+| `CUPS_SJCE_BOYS_XEROX_1_URI` | CUPS only | Server-side IPP/IPPS URI for SJCE Boys Xerox-1 |
+| `CUPS_SJCE_GIRLS_XEROX_1_URI` | CUPS only | Server-side IPP/IPPS URI for SJCE Girls Xerox-1 |
+| `CUPS_SJIT_PERIWINKLE_XEROX_URI` | CUPS only | Server-side IPP/IPPS URI for SJIT-Periwinkle Xerox |
+| `CUPS_USERNAME`, `CUPS_PASSWORD` | CUPS only | Optional Basic Auth pair; only accepted with IPPS |
+| `CUPS_REQUESTING_USER` | No | IPP job owner label (default `unisync`) |
 
 Never prefix a secret with `NEXT_PUBLIC_`. `.env*` is gitignored; only `.env.example` is tracked.
 
@@ -251,7 +257,7 @@ Supabase free-tier projects are resource-constrained and can be paused after ina
 
 ## Integrations and honest limitations
 
-- **Printing is simulated by default.** A job marked *ready* in simulated mode does not produce paper. `src/lib/printer/index.ts` defines the adapter boundary; the CUPS/IPP adapter is intentionally not implemented and refuses to mark jobs ready until a real, tested adapter replaces it. Set `PRINTER_MODE=cups` only after implementing it.
+- **Printing is simulated by default.** Each new request selects one of five Xerox locations. To enable CUPS, configure the five server-only location-specific URIs (`ipp://` or preferably `ipps://`), plus `CUPS_USERNAME` and `CUPS_PASSWORD` when the server requires Basic Auth. Credentials are only accepted with IPPS. Then select **CUPS / IPP** in the PrintPulse admin settings. UniSync routes each PDF and its print options to the selected location when staff move it to *processing*, then stores the CUPS job ID to prevent accidental resubmission. CUPS acceptance is not proof that paper finished printing; staff must verify the queue/output before marking a job *ready*. Run migrations `20261104000100_add_cups_job_id.sql`, `20261104000200_add_print_location.sql`, and `20261104000300_update_print_locations.sql` before enabling CUPS. The application host must have network access to all configured CUPS queues; configure and test against the actual printers before production use.
 - **PDF handling is metadata-only.** The upload form validates MIME type and size; the app does not render or parse PDF contents, so page count is entered by the student and capped by settings. Before charging real money, add server-side PDF parsing and verify the page count.
 - **Push notifications and fee payments are not built.** FCM and Razorpay were listed as optional in the brief and are intentionally omitted rather than half-wired. In-app notifications are fully implemented. A payment provider would need order creation, signature verification and reconciliation before any fee feature ships.
 - **Demo mode is in-memory.** It exists for evaluation and preview deployments; do not treat it as persistent storage.
@@ -325,4 +331,4 @@ Do not launch publicly until all items are complete and verified:
 | Login redirects to the wrong host | Set `NEXT_PUBLIC_APP_URL` and the Supabase Site URL/redirect allow-list |
 | "new row violates row-level security policy" | Check the signed-in role and the relevant policy in `20261023000300_rls.sql`; admins cannot be created through the registration form |
 | Realtime does not update | Confirm the tables are in the `supabase_realtime` publication and the browser key is the anon key |
-| Print job cannot be marked ready | `PRINTER_MODE=cups` without a working adapter is refused by design; use `simulated` or implement the adapter |
+| CUPS job not submitted | Apply both print migrations, configure the selected location's CUPS URI, and select CUPS / IPP in PrintPulse admin settings; check the CUPS queue before retrying an ambiguous submission |

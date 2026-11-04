@@ -11,7 +11,8 @@ import { getDemoStore } from "@/lib/demo/store";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { notifyByRoles, notifyUsers, writeAuditLog } from "@/lib/data/helpers";
 import { calculatePrintCost } from "@/lib/print";
-import { getPrinterAdapter } from "@/lib/printer";
+import { getPrinterAdapter, type PrintReceipt } from "@/lib/printer";
+import type { PrintLocation } from "@/lib/print-locations";
 
 export { calculatePrintCost };
 
@@ -31,17 +32,15 @@ export async function getPrintSettings(): Promise<PrintSettings> {
   if (isDemoMode()) return getDemoStore().print_settings;
   const supabase = await createSupabaseServerClient();
   const { data } = await supabase.from("print_queue_settings").select("*").limit(1).maybeSingle();
-  const settings = (data as PrintSettings) ?? DEFAULT_PRINT_SETTINGS;
-  const envMode = process.env.PRINTER_MODE;
-  return {
-    ...settings,
-    printer_mode: envMode === "cups" ? "cups" : envMode === "simulated" ? "simulated" : settings.printer_mode,
-  };
+  return (data as PrintSettings) ?? DEFAULT_PRINT_SETTINGS;
 }
 
 export async function updatePrintSettings(profile: Profile, input: Partial<PrintSettings>) {
   if (profile.role !== "admin") return { ok: false as const, error: "Only administrators can update print pricing." };
   if (isDemoMode()) {
+    if (input.printer_mode === "cups") {
+      return { ok: false as const, error: "CUPS printing cannot be enabled in demo mode." };
+    }
     const store = getDemoStore();
     Object.assign(store.print_settings, input, { updated_at: new Date().toISOString() });
     await writeAuditLog(profile, "print.settings_updated", "print_queue_settings", store.print_settings.id);
@@ -163,6 +162,7 @@ export async function createPrintRequest(
   profile: Profile,
   input: {
     document_name: string;
+    print_location: PrintLocation;
     pages: number;
     page_range: string | null;
     copies: number;
@@ -188,6 +188,7 @@ export async function createPrintRequest(
       id: crypto.randomUUID(),
       request_number: `PP-${1000 + store.print_requests.length + 1}`,
       student_id: profile.id,
+      print_location: input.print_location,
       student: { id: profile.id, full_name: profile.full_name, email: profile.email, roll_number: profile.roll_number },
       document_name: input.document_name,
       file_path: null,
@@ -235,6 +236,7 @@ export async function createPrintRequest(
     .insert({
       student_id: profile.id,
       document_name: input.document_name,
+      print_location: input.print_location,
       file_path: path,
       file_size: file.size,
       pages: input.pages,
@@ -320,18 +322,96 @@ export async function updatePrintRequestStatus(
   const request = await getPrintRequest(profile, id);
   if (!request) return { ok: false as const, error: "Print request not found." };
 
-  if (status === "ready" || status === "completed") {
-    const printer = getPrinterAdapter(request.print_mode);
-    if (!printer.isAvailable()) {
+  let submittedPrinterJobId: number | undefined;
+  const isCupsJob = request.print_mode === "cups";
+  const isStartingCupsJob = isCupsJob && status === "processing";
+
+  if (isCupsJob && request.printer_job_id && ["submitted", "queued", "cancelled"].includes(status)) {
+    return { ok: false as const, error: "CUPS already accepted this job. Verify the printer queue before changing its state." };
+  }
+
+  if (isCupsJob && (status === "ready" || status === "completed") && !request.printer_job_id) {
+    return { ok: false as const, error: "Submit this job to CUPS from Processing before marking it ready." };
+  }
+
+  if (isCupsJob && !request.printer_job_id && ["processing", "failed"].includes(request.status)) {
+    if (status !== "failed") {
       return {
         ok: false as const,
-        error:
-          "The physical printer adapter is not configured or tested. Keep the job in processing until CUPS/IPP is verified.",
+        error: "This CUPS submission has no saved job ID. Check the CUPS queue before changing or retrying it.",
       };
     }
   }
 
-  if (isDemoMode()) {
+  if (isStartingCupsJob && request.printer_job_id) {
+    if (request.status === "processing") return { ok: true as const, printerJobId: request.printer_job_id };
+    return { ok: false as const, error: `CUPS already accepted this job as job ${request.printer_job_id}.` };
+  }
+
+  if (isStartingCupsJob && !["submitted", "queued"].includes(request.status)) {
+    return { ok: false as const, error: "Only submitted or queued jobs can be sent to CUPS." };
+  }
+
+  if (isStartingCupsJob) {
+    const printer = getPrinterAdapter("cups");
+    if (!printer.isAvailable(request.print_location)) {
+      return {
+        ok: false as const,
+        error: `Configure the IPP URI for ${request.print_location} and valid IPPS credentials before printing.`,
+      };
+    }
+
+    const fileUrl = await getPrintFileUrl(profile, request.file_path);
+    if (!fileUrl) return { ok: false as const, error: "The uploaded PDF could not be accessed." };
+    const fileResponse = await fetch(fileUrl, { cache: "no-store" });
+    if (!fileResponse.ok) return { ok: false as const, error: "The uploaded PDF could not be downloaded." };
+    const pdf = Buffer.from(await fileResponse.arrayBuffer());
+
+    const supabase = await createSupabaseServerClient();
+    const { data: claimed, error: claimError } = await supabase
+      .from("print_requests")
+      .update({ status: "processing", notes: note ?? request.notes, updated_at: new Date().toISOString() })
+      .eq("id", id)
+      .in("status", ["submitted", "queued"])
+      .is("printer_job_id", null)
+      .select("id")
+      .maybeSingle();
+    if (claimError) return { ok: false as const, error: claimError.message };
+    if (!claimed) return { ok: false as const, error: "Another staff member already claimed this print job." };
+
+    let receipt: PrintReceipt;
+    try {
+      receipt = await printer.submit({
+        requestNumber: request.request_number,
+        printLocation: request.print_location,
+        filePath: request.file_path,
+        pages: request.pages,
+        pageRange: request.page_range,
+        copies: request.copies,
+        colorMode: request.color_mode,
+        sides: request.sides,
+        pdf,
+      });
+    } catch (error) {
+      return {
+        ok: false as const,
+        error: `CUPS submission did not complete. The request remains in Processing; verify the CUPS queue before retrying. ${error instanceof Error ? error.message : ""}`.trim(),
+      };
+    }
+
+    const { error: receiptError } = await supabase
+      .from("print_requests")
+      .update({ printer_job_id: receipt.printerJobId, updated_at: new Date().toISOString() })
+      .eq("id", id)
+      .eq("status", "processing");
+    if (receiptError) {
+      return {
+        ok: false as const,
+        error: `CUPS accepted job ${receipt.printerJobId}, but UniSync could not save its ID. Check CUPS before changing this request.`,
+      };
+    }
+    submittedPrinterJobId = receipt.printerJobId;
+  } else if (isDemoMode()) {
     const target = getDemoStore().print_requests.find((item) => item.id === id);
     if (!target) return { ok: false as const, error: "Print request not found." };
     target.status = status;
@@ -361,7 +441,7 @@ export async function updatePrintRequestStatus(
     link: `/printpulse/${request.id}`,
   });
   await writeAuditLog(profile, "print.status_updated", "print_requests", id, { status });
-  return { ok: true as const };
+  return { ok: true as const, printerJobId: submittedPrinterJobId };
 }
 
 export async function getPrintFileUrl(profile: Profile, path: string | null) {

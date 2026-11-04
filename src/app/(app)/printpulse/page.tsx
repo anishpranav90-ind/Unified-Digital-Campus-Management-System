@@ -33,6 +33,7 @@ import {
   TableShell,
 } from "@/components/ui";
 import { PrintStatusBadge } from "@/components/modules/status-badge";
+import { getPrintLocationLabel } from "@/lib/print-locations";
 import { RealtimeRefresh } from "@/components/realtime-refresh";
 import { ColumnChart } from "@/components/dashboard/charts";
 import { PrintSettingsForm } from "./settings-form";
@@ -141,7 +142,7 @@ export default async function PrintPulsePage({
             title="How the queue works"
             description="Estimated waiting time = jobs ahead × average processing time"
             icon={<Printer className="h-4 w-4" />}
-            action={<Badge tone="slate">Simulated printer</Badge>}
+            action={<Badge tone="slate">{settings.printer_mode === "cups" ? "CUPS / IPP" : "Simulated printer"}</Badge>}
           />
           <div className="grid gap-4 p-5 sm:grid-cols-3">
             <div className="rounded-xl bg-canvas p-3">
@@ -163,8 +164,9 @@ export default async function PrintPulsePage({
             </div>
           </div>
           <p className="border-t border-line px-5 py-3 text-[10px] text-amber-700">
-            No physical printer is connected. Jobs are marked as simulated output; the print desk updates the
-            digital queue only.
+            {settings.printer_mode === "cups"
+              ? "CUPS accepts jobs over IPP. The print desk confirms completed output before marking it ready."
+              : "No physical printer is connected. Jobs are simulated; the print desk updates the digital queue only."}
           </p>
         </Card>
 
@@ -255,7 +257,10 @@ export default async function PrintPulsePage({
             <tbody className="divide-y divide-line">
               {requests.map((request) => (
                 <tr key={request.id} className="text-xs hover:bg-slate-50/70">
-                  <td className="whitespace-nowrap px-4 py-3 font-semibold text-ink">{request.request_number}</td>
+                  <td className="whitespace-nowrap px-4 py-3 font-semibold text-ink">
+                    {request.request_number}
+                    <p className="text-[10px] font-normal text-muted">{getPrintLocationLabel(request.print_location)}</p>
+                  </td>
                   <td className="whitespace-nowrap px-4 py-3">
                     <p className="font-medium text-ink">{request.student?.full_name ?? "Student"}</p>
                     <p className="text-[10px] text-muted">{request.student?.roll_number ?? ""}</p>
@@ -299,6 +304,9 @@ export default async function PrintPulsePage({
                     <p className="mt-0.5 text-[10px] text-muted">
                       {request.request_number} · {formatDateTime(request.created_at)}
                     </p>
+                    <p className="mt-0.5 text-[10px] font-medium leading-relaxed text-brand-blue">
+                      Available at {getPrintLocationLabel(request.print_location)}
+                    </p>
                   </div>
                   <PrintStatusBadge status={request.status} />
                 </div>
@@ -332,7 +340,7 @@ export default async function PrintPulsePage({
               icon={<Settings2 className="h-4 w-4" />}
               action={<Badge tone="navy">Admin only</Badge>}
             />
-            <PrintSettingsForm settings={settings} />
+            <PrintSettingsForm settings={settings} demoMode={isDemoMode()} />
           </Card>
         </div>
       ) : null}

@@ -1,3 +1,5 @@
+import type { PrintLocation } from "@/lib/print-locations";
+
 export type Role = "student" | "faculty" | "admin";
 
 export type PrintStatus =
@@ -142,6 +144,7 @@ export interface PrintRequest {
   id: string;
   request_number: string;
   student_id: string;
+  print_location: PrintLocation;
   student?: Pick<Profile, "id" | "full_name" | "email" | "roll_number"> | null;
   document_name: string;
   file_path: string | null;
@@ -152,6 +155,7 @@ export interface PrintRequest {
   color_mode: "bw" | "color";
   sides: "single" | "double";
   status: PrintStatus;
+  printer_job_id?: number | null;
   estimated_cost: number;
   payment_status: "unpaid" | "paid" | "not_required" | "refunded";
   payment_method: string;

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { PRINT_LOCATION_IDS } from "@/lib/print-locations";
 
 export const loginSchema = z.object({
   email: z.string().trim().email("Enter a valid email address."),
@@ -16,6 +17,7 @@ export const registerSchema = z.object({
 
 export const printRequestSchema = z.object({
   document_name: z.string().trim().min(3, "Give the document a name.").max(120),
+  print_location: z.enum(PRINT_LOCATION_IDS),
   pages: z.coerce.number().int().min(1, "At least one page is required.").max(100),
   page_range: z.string().trim().max(40).optional().or(z.literal("")),
   copies: z.coerce.number().int().min(1).max(20),
@@ -42,6 +44,7 @@ export const printSettingsSchema = z.object({
   color_double: z.coerce.number().min(0).max(100),
   avg_processing_minutes: z.coerce.number().min(1).max(60),
   max_pages_per_job: z.coerce.number().int().min(1).max(500),
+  printer_mode: z.enum(["simulated", "cups"]),
 });
 
 export const announcementSchema = z.object({

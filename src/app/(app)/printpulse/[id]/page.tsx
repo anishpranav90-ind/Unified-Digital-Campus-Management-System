@@ -21,6 +21,7 @@ import { PrintStatusBadge } from "@/components/modules/status-badge";
 import { PrintStatusForm } from "../print-status-form";
 import { RealtimeRefresh } from "@/components/realtime-refresh";
 import { isDemoMode } from "@/lib/env";
+import { getPrintLocationLabel } from "@/lib/print-locations";
 
 export const metadata = { title: "Print job" };
 
@@ -84,7 +85,11 @@ export default async function PrintRequestPage({
               title="Request progress"
               description="Tracked by the print desk in real time"
               icon={<Printer className="h-4 w-4" />}
-              action={<Badge tone="amber">Simulated output</Badge>}
+              action={
+                <Badge tone={request.print_mode === "cups" ? "teal" : "amber"}>
+                  {request.print_mode === "cups" ? "CUPS / IPP" : "Simulated output"}
+                </Badge>
+              }
             />
             <div className="p-5">
               {terminalFailure ? (
@@ -153,6 +158,7 @@ export default async function PrintRequestPage({
               <dl className="space-y-2.5 text-xs">
                 {[
                   ["Request number", request.request_number],
+                  ["Xerox location", getPrintLocationLabel(request.print_location)],
                   ["Pages", request.pages],
                   ["Page range", request.page_range ?? "All pages"],
                   ["Copies", request.copies],
@@ -257,12 +263,14 @@ export default async function PrintRequestPage({
 
           {isStaff ? (
             <Card className="p-5">
-              <p className="flex items-center gap-1.5 text-xs font-semibold text-amber-800">
-                <Printer className="h-4 w-4" /> Physical printer not connected
+                <p className="flex items-center gap-1.5 text-xs font-semibold text-amber-800">
+                <Printer className="h-4 w-4" />
+                {request.print_mode === "cups" ? "CUPS / IPP print destination" : "Physical printer not connected"}
               </p>
               <p className="mt-1.5 text-[10px] leading-relaxed text-muted">
-                CUPS/IPP integration is an optional module. Until a printer is configured and verified, status
-                changes describe simulated output only.
+                {request.print_mode === "cups"
+                  ? `This request is routed to ${getPrintLocationLabel(request.print_location)}. Confirm the printed pages before marking it ready.`
+                  : "Status changes describe simulated output only until a physical printer is configured."}
               </p>
             </Card>
           ) : null}

@@ -9,6 +9,7 @@ import { EMPTY_FORM_STATE } from "@/lib/action-state";
 import { calculatePrintCost } from "@/lib/print";
 import { formatCurrency } from "@/lib/utils";
 import { MAX_PDF_BYTES } from "@/lib/constants";
+import { PRINT_LOCATION_IDS, PRINT_LOCATION_LABELS } from "@/lib/print-locations";
 import type { PrintSettings } from "@/types";
 
 export function PrintRequestForm({ settings }: { settings: PrintSettings }) {
@@ -39,6 +40,16 @@ export function PrintRequestForm({ settings }: { settings: PrintSettings }) {
             maxLength={120}
             required
           />
+        </Field>
+
+        <Field label="Xerox location" htmlFor="print_location" required>
+          <Select id="print_location" name="print_location" defaultValue={PRINT_LOCATION_IDS[0]}>
+            {PRINT_LOCATION_IDS.map((location) => (
+              <option key={location} value={location}>
+                {PRINT_LOCATION_LABELS[location]}
+              </option>
+            ))}
+          </Select>
         </Field>
 
         <Field

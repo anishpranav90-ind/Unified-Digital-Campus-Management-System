@@ -1,13 +1,13 @@
 "use client";
 
 import { useActionState } from "react";
-import { Alert, Field, Input } from "@/components/ui";
+import { Alert, Field, Input, Select } from "@/components/ui";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { updatePrintSettingsAction } from "@/lib/actions/printpulse";
 import { EMPTY_FORM_STATE } from "@/lib/action-state";
 import type { PrintSettings } from "@/types";
 
-export function PrintSettingsForm({ settings }: { settings: PrintSettings }) {
+export function PrintSettingsForm({ settings, demoMode }: { settings: PrintSettings; demoMode: boolean }) {
   const [state, formAction] = useActionState(updatePrintSettingsAction, EMPTY_FORM_STATE);
 
   return (
@@ -29,7 +29,7 @@ export function PrintSettingsForm({ settings }: { settings: PrintSettings }) {
           <Input id="color_double" name="color_double" type="number" min="0" step="0.5" defaultValue={settings.color_double} />
         </Field>
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid gap-3 sm:grid-cols-3">
         <Field label="Avg. processing (min)" htmlFor="avg_processing_minutes" hint="Used for wait estimates">
           <Input
             id="avg_processing_minutes"
@@ -50,13 +50,28 @@ export function PrintSettingsForm({ settings }: { settings: PrintSettings }) {
             defaultValue={settings.max_pages_per_job}
           />
         </Field>
+        {demoMode ? (
+          <input type="hidden" name="printer_mode" value="simulated" />
+        ) : (
+          <Field label="Printer mode" htmlFor="printer_mode">
+            <Select id="printer_mode" name="printer_mode" defaultValue={settings.printer_mode}>
+              <option value="simulated">Simulated</option>
+              <option value="cups">CUPS / IPP</option>
+            </Select>
+          </Field>
+        )}
       </div>
 
       <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-[10px] leading-relaxed text-amber-800">
-        <strong>Printer mode: {settings.printer_mode}</strong>. Set it with the <code>PRINTER_MODE</code>{" "}
-        environment variable. In simulated mode, marking a job “Ready for Collection” records a simulated
-        output; no document is physically printed. CUPS/IPP support is an optional module that must be
-        configured and verified before claiming real printing.
+        {demoMode ? (
+          <strong>Demo jobs are always simulated.</strong>
+        ) : (
+          <>
+            <strong>Printer mode: {settings.printer_mode}</strong>. CUPS requires a server-side{" "}
+            <code>CUPS_PRINTER_URI</code>; use IPPS when credentials are required. Verify the print at the desk
+            before marking it ready.
+          </>
+        )}
       </div>
 
       <SubmitButton pendingText="Saving pricing…">Save print settings</SubmitButton>
