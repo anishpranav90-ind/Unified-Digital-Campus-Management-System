@@ -241,7 +241,7 @@ Both accept an origin argument, for example `npm run test:routes -- http://local
 
 1. Push the repository to GitHub.
 2. Import the project in Vercel. Framework preset: Next.js. Build command `npm run build`.
-3. Add the production environment variables from the table above. Do **not** add `SUPABASE_SERVICE_ROLE_KEY` to Vercel.
+3. Add the production environment variables from the table above. Add `SUPABASE_SERVICE_ROLE_KEY` only as a server-side Vercel environment variable; never expose it with a `NEXT_PUBLIC_` prefix.
 4. Add and verify the chosen custom domain in Vercel, configure its DNS records, and confirm HTTPS is active.
 5. Set `NEXT_PUBLIC_APP_URL`, the Supabase Site URL and redirect allow-list to the verified custom domain.
 6. Complete every item in the launch gate below before deploying publicly.

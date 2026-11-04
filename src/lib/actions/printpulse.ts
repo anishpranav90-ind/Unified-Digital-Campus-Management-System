@@ -41,15 +41,20 @@ export async function createPrintRequestAction(_prev: FormState, formData: FormD
   ) {
     return { error: "Direct UPI is not configured. Choose cash or configure a valid UPI_PAYEE_VPA." };
   }
-  if (
-    paymentOption === "razorpay" &&
-    (isDemoMode() ||
+  if (paymentOption === "razorpay") {
+    if (isDemoMode()) {
+      return { error: "Razorpay checkout requires Supabase-backed mode. Configure Supabase and disable demo mode first." };
+    }
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      return { error: "Razorpay settlement is unavailable: set the server-side SUPABASE_SERVICE_ROLE_KEY in .env.local and restart the app." };
+    }
+    if (
       !process.env.RAZORPAY_KEY_ID ||
       !process.env.RAZORPAY_KEY_SECRET ||
-      !process.env.RAZORPAY_WEBHOOK_SECRET ||
-      !process.env.SUPABASE_SERVICE_ROLE_KEY)
-  ) {
-    return { error: "Razorpay is not fully configured. Choose UPI or cash, or configure Razorpay settlement first." };
+      !process.env.RAZORPAY_WEBHOOK_SECRET
+    ) {
+      return { error: "Razorpay is missing server configuration. Set RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET, and RAZORPAY_WEBHOOK_SECRET." };
+    }
   }
   if (!(file instanceof File) && paymentOption === "cash") return { error: "Attach a PDF for cash payment." };
 
