@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { redirect } from "next/navigation";
 import { requireProfile } from "@/lib/session";
-import { getPrintSettings } from "@/lib/data/printpulse";
+import { getPrintSettings, getWeeklyUrgentPrintCount } from "@/lib/data/printpulse";
 import { PageHeader } from "@/components/ui";
 import { PrintRequestForm } from "./print-request-form";
 
@@ -11,7 +11,10 @@ export const metadata = { title: "New print request" };
 export default async function NewPrintRequestPage() {
   const profile = await requireProfile();
   if (profile.role !== "student") redirect("/printpulse");
-  const settings = await getPrintSettings();
+  const [settings, urgentRequestsThisWeek] = await Promise.all([
+    getPrintSettings(),
+    getWeeklyUrgentPrintCount(profile),
+  ]);
 
   return (
     <div>
@@ -26,7 +29,7 @@ export default async function NewPrintRequestPage() {
         title="New print request"
         description="Upload a PDF, choose your print options and join the digital queue."
       />
-      <PrintRequestForm settings={settings} />
+      <PrintRequestForm settings={settings} urgentRequestsThisWeek={urgentRequestsThisWeek} />
     </div>
   );
 }

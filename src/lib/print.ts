@@ -16,9 +16,17 @@ export const FALLBACK_PRICING: PrintPricing = {
   max_pages_per_job: 100,
 };
 
+export const URGENT_PRINT_PRICE_MULTIPLIER = 1.5;
+
 export function calculatePrintCost(
   settings: PrintPricing,
-  input: { pages: number; copies: number; color_mode: "bw" | "color"; sides: "single" | "double" },
+  input: {
+    pages: number;
+    copies: number;
+    color_mode: "bw" | "color";
+    sides: "single" | "double";
+    priority?: "normal" | "urgent";
+  },
 ) {
   const rate =
     input.color_mode === "color"
@@ -28,5 +36,6 @@ export function calculatePrintCost(
       : input.sides === "double"
         ? settings.bw_double
         : settings.bw_single;
-  return Math.max(0, Math.round(rate * input.pages * input.copies * 100) / 100);
+  const priorityMultiplier = input.priority === "urgent" ? URGENT_PRINT_PRICE_MULTIPLIER : 1;
+  return Math.max(0, Math.round(rate * input.pages * input.copies * priorityMultiplier * 100) / 100);
 }

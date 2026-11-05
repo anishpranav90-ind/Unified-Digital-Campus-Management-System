@@ -51,6 +51,12 @@ export default async function PrintRequestPage({
   const request = await getPrintRequest(profile, id);
   if (!request) notFound();
 
+  const priorityPriceMultiplier = Number(request.priority_price_multiplier ?? 1);
+  const basePrintCost =
+    priorityPriceMultiplier > 1
+      ? Math.round((Number(request.estimated_cost) / priorityPriceMultiplier) * 100) / 100
+      : Number(request.estimated_cost);
+  const urgentSurcharge = Math.round((Number(request.estimated_cost) - basePrintCost) * 100) / 100;
   const isStaff = profile.role !== "student";
   const canCancel =
     profile.role === "student" &&
@@ -184,6 +190,25 @@ export default async function PrintRequestPage({
                     <IndianRupee className="h-3 w-3" /> Estimated cost
                   </p>
                   <p className="mt-1 text-2xl font-semibold text-ink">{formatCurrency(request.estimated_cost)}</p>
+                  {priorityPriceMultiplier > 1 ? (
+                    <div className="mt-2 space-y-1 border-t border-line pt-2 text-[10px] text-muted">
+                      <div className="flex justify-between gap-2">
+                        <span>Base print cost</span>
+                        <span>{formatCurrency(basePrintCost)}</span>
+                      </div>
+                      <div className="flex justify-between gap-2">
+                        <span>Urgent priority ({priorityPriceMultiplier}×)</span>
+                        <span>{formatCurrency(urgentSurcharge)}</span>
+                      </div>
+                    </div>
+                  ) : null}
+                  {request.requested_priority === "urgent" &&
+                  request.priority === "normal" &&
+                  request.urgent_fallback_at ? (
+                    <p className="mt-2 rounded-lg bg-amber-50 p-2 text-[10px] text-amber-800">
+                      The urgent lane was full. This job is at the top of the Normal queue, and the urgent surcharge was removed.
+                    </p>
+                  ) : null}
                   <p className="mt-1 text-[10px] capitalize text-muted">
                     Payment: {request.payment_status.replace("_", " ")} · {request.payment_method}
                   </p>

@@ -5,6 +5,7 @@ import { getDemoStore } from "@/lib/demo/store";
 import { isDemoMode } from "@/lib/env";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { enforceDemoUrgentPrintCapacity, notifyUrgentPrintFallback } from "@/lib/data/printpulse";
 
 export function hashCounterToken(token: string) {
   return createHash("sha256").update(token).digest("hex");
@@ -358,6 +359,9 @@ export async function verifyCounterPayment(
       request.payment_method = method;
       request.status = request.file_path ? "submitted" : "payment_pending";
       request.updated_at = new Date().toISOString();
+      if (enforceDemoUrgentPrintCapacity(request)) {
+        await notifyUrgentPrintFallback(request.student_id, request.id, request.request_number);
+      }
     } else {
       const order = store.ecafe_orders.find((item) => item.id === transaction.ecafe_order_id);
       if (!order || order.status !== "PAYMENT_PENDING" || order.amount_paise !== transaction.amount_paise) {
@@ -372,6 +376,27 @@ export async function verifyCounterPayment(
   }
 
   const supabase = await createSupabaseServerClient();
+  const { data: transactionBefore, error: requestLookupError } = await supabase
+    .from("payment_transactions")
+    .select("module, print_request_id")
+    .eq("id", transactionId)
+    .maybeSingle();
+  if (requestLookupError) return { ok: false as const, error: requestLookupError.message };
+  let printRequestBefore: {
+    id: string;
+    student_id: string;
+    request_number: string;
+    priority: "normal" | "urgent";
+  } | null = null;
+  if (transactionBefore?.module === "printpulse" && transactionBefore.print_request_id) {
+    const { data: request, error: printRequestError } = await supabase
+      .from("print_requests")
+      .select("id, student_id, request_number, priority")
+      .eq("id", transactionBefore.print_request_id)
+      .maybeSingle();
+    if (printRequestError) return { ok: false as const, error: printRequestError.message };
+    printRequestBefore = request;
+  }
   const { data, error } = await supabase.rpc("settle_payment_transaction", {
     p_transaction_id: transactionId,
     p_source: method,
@@ -381,6 +406,21 @@ export async function verifyCounterPayment(
     p_razorpay_payment_id: null,
   });
   if (error) return { ok: false as const, error: error.message };
+  if (data && printRequestBefore?.priority === "urgent") {
+    const { data: printRequestAfter, error: priorityError } = await supabase
+      .from("print_requests")
+      .select("priority, urgent_fallback_at")
+      .eq("id", printRequestBefore.id)
+      .maybeSingle();
+    if (priorityError) return { ok: false as const, error: `Payment was verified, but queue priority could not be confirmed: ${priorityError.message}` };
+    if (printRequestAfter?.priority === "normal" && printRequestAfter.urgent_fallback_at) {
+      await notifyUrgentPrintFallback(
+        printRequestBefore.student_id,
+        printRequestBefore.id,
+        printRequestBefore.request_number,
+      );
+    }
+  }
   return data ? { ok: true as const } : { ok: false as const, error: "This transaction is no longer pending." };
 }
 
@@ -410,7 +450,7 @@ export async function settleVerifiedRazorpayPayment(input: {
   if (!admin) return { ok: false as const, error: "Configure the Supabase service role key for verified payment settlement." };
   const { data: transaction, error: lookupError } = await admin
     .from("payment_transactions")
-    .select("id, amount_paise, razorpay_order_id, method, status")
+    .select("id, amount_paise, razorpay_order_id, method, status, module, print_request_id")
     .eq("id", input.transactionId)
     .maybeSingle();
   if (lookupError) return { ok: false as const, error: lookupError.message };
@@ -425,6 +465,21 @@ export async function settleVerifiedRazorpayPayment(input: {
     return { ok: false as const, error: "The captured payment does not match the pending order." };
   }
 
+  let printRequestBefore: {
+    id: string;
+    student_id: string;
+    request_number: string;
+    priority: "normal" | "urgent";
+  } | null = null;
+  if (transaction.module === "printpulse" && transaction.print_request_id) {
+    const { data: request, error: requestError } = await admin
+      .from("print_requests")
+      .select("id, student_id, request_number, priority")
+      .eq("id", transaction.print_request_id)
+      .maybeSingle();
+    if (requestError) return { ok: false as const, error: requestError.message };
+    printRequestBefore = request;
+  }
   const { data, error } = await admin.rpc("settle_payment_transaction", {
     p_transaction_id: input.transactionId,
     p_source: "razorpay",
@@ -434,5 +489,20 @@ export async function settleVerifiedRazorpayPayment(input: {
     p_razorpay_payment_id: input.paymentId,
   });
   if (error) return { ok: false as const, error: error.message };
+  if (data && printRequestBefore?.priority === "urgent") {
+    const { data: printRequestAfter, error: priorityError } = await admin
+      .from("print_requests")
+      .select("priority, urgent_fallback_at")
+      .eq("id", printRequestBefore.id)
+      .maybeSingle();
+    if (priorityError) return { ok: false as const, error: `Payment was verified, but queue priority could not be confirmed: ${priorityError.message}` };
+    if (printRequestAfter?.priority === "normal" && printRequestAfter.urgent_fallback_at) {
+      await notifyUrgentPrintFallback(
+        printRequestBefore.student_id,
+        printRequestBefore.id,
+        printRequestBefore.request_number,
+      );
+    }
+  }
   return data ? { ok: true as const } : { ok: false as const, error: "This payment is no longer pending." };
 }

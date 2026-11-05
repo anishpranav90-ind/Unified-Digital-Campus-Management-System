@@ -164,6 +164,9 @@ export interface PrintRequest {
   payment_status: "unpaid" | "paid" | "not_required" | "refunded";
   payment_method: string;
   priority: "normal" | "urgent";
+  requested_priority?: "normal" | "urgent";
+  priority_price_multiplier?: number;
+  urgent_fallback_at?: string | null;
   print_mode: "simulated" | "cups";
   notes: string | null;
   created_at: string;

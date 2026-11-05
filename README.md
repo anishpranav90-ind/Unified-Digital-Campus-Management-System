@@ -106,6 +106,7 @@ The payment workflow adds:
 11. `supabase/migrations/20261105000300_allow_consumer_email_domains.sql` — adds Gmail, Yahoo and other common providers to the sign-in allowlist
 12. `supabase/migrations/20261105000400_ecafe_priority_queue.sql` — assigns daily tokens after verified payment, enables express/FIFO kitchen lanes, pickup QR redemption, and the Realtime token board
 13. `supabase/migrations/20261105000500_transaction_history.sql` — adds the owner-scoped, paginated PrintPulse/e-Cafe transaction history query
+14. `supabase/migrations/20261105000600_printpulse_urgent_guardrails.sql` — adds urgent pricing, weekly quotas, active-lane capacity fallback, and queue ordering
 
 Then apply the reference data (already included in `npm run db:apply`):
 
@@ -121,6 +122,10 @@ The reference seed inserts departments and default print pricing. It is safe to 
 Apply `20261105000400_ecafe_priority_queue.sql` after the guarded payments migrations. Cash orders stay in `PAYMENT_PENDING` and are excluded from the kitchen until a staff member verifies the cashier QR. A verified payment receives the next daily token atomically; Razorpay enters the queue only after the server-side settlement flow verifies the payment. Direct UPI intent is not a payment webhook and still requires counter verification against the bank reference.
 
 Cafe staff use `/cashier` to scan a pending cash QR, review its item breakdown and exact amount, and confirm cash receipt. Confirmation reuses the guarded settlement flow and sends the order to `QUEUED`; unpaid orders remain hidden from the kitchen. Staff use `/ecafe/counter` to verify direct UPI receipts and move paid orders through `QUEUED → PREPARING → READY`; the pickup QR is available only in `READY`. Counter redemption changes a ready order to `COMPLETED`, while early scans return the order's position in its FIFO lane. `/ecafe/board` displays the live queue with separate express and standard lanes. The board contains only token numbers and statuses; its table has read-only authenticated access and is published through Supabase Realtime. Student order pages and the kitchen board receive the corresponding Realtime updates. Demo mode simulates updates with polling.
+
+When demo mode is enabled and the live token board is empty, `/ecafe/board` displays six local sample tokens with item, payment, lane, and pickup-window details. **Advance sample orders** moves demo tokens from queued to preparation and ready; **Reset** restores the sample states. These cards are presentation-only and never enter the real kitchen queue.
+
+Each e-Cafe order has its own live tracker at `/ecafe/order/[id]`. Payment-pending orders link back to checkout and clearly explain that they are not queued yet. Once payment is verified, the order receives a token, appears on the kitchen board, and advances through queued, preparing, ready, and completed as staff update it.
 
 Users can open **Transaction History** from the profile dropdown at `/profile/transactions`. The page combines the signed-in user's PrintPulse jobs and e-Cafe orders, with category, search, date-range, and paginated filters. Its `/api/profile/transactions` endpoint uses the `list_my_transaction_history` database function, which is restricted to the caller's own records.
 
@@ -228,6 +233,7 @@ Server actions re-check the session and role. The database enforces the same rul
 - Audit logs are admin-readable and written by privileged server actions.
 - Anonymous users get no access to app data; departments alone are publicly readable for the registration form.
 - Print pricing is computed or validated in the database, not trusted from the browser.
+- PrintPulse urgent requests cost 1.5× the base rate and are limited to two requested urgent jobs per student per UTC calendar week. Three urgent slots are protected across pending payment requests and paid, file-attached jobs; when full, a new request moves to the front of the Normal queue, its surcharge is removed, and the student is notified.
 
 Verify the policies against a seeded project:
 

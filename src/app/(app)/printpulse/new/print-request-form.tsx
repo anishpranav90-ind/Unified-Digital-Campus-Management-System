@@ -6,18 +6,25 @@ import { Alert, Field, Input, Select, Textarea } from "@/components/ui";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { createPrintRequestAction } from "@/lib/actions/printpulse";
 import { EMPTY_FORM_STATE } from "@/lib/action-state";
-import { calculatePrintCost } from "@/lib/print";
+import { calculatePrintCost, URGENT_PRINT_PRICE_MULTIPLIER } from "@/lib/print";
 import { formatCurrency } from "@/lib/utils";
 import { MAX_PDF_BYTES } from "@/lib/constants";
 import { PRINT_LOCATION_IDS, PRINT_LOCATION_LABELS } from "@/lib/print-locations";
 import type { PrintSettings } from "@/types";
 
-export function PrintRequestForm({ settings }: { settings: PrintSettings }) {
+export function PrintRequestForm({
+  settings,
+  urgentRequestsThisWeek,
+}: {
+  settings: PrintSettings;
+  urgentRequestsThisWeek: number;
+}) {
   const [state, formAction] = useActionState(createPrintRequestAction, EMPTY_FORM_STATE);
   const [pages, setPages] = useState(1);
   const [copies, setCopies] = useState(1);
   const [colorMode, setColorMode] = useState<"bw" | "color">("bw");
   const [sides, setSides] = useState<"single" | "double">("double");
+  const [priority, setPriority] = useState<"normal" | "urgent">("normal");
   const [paymentOption, setPaymentOption] = useState<"upi" | "razorpay" | "cash">("upi");
   const [fileLabel, setFileLabel] = useState("");
 
@@ -26,6 +33,7 @@ export function PrintRequestForm({ settings }: { settings: PrintSettings }) {
     copies: Number.isFinite(copies) ? copies : 0,
     color_mode: colorMode,
     sides,
+    priority,
   });
 
   return (
@@ -146,10 +154,29 @@ export function PrintRequestForm({ settings }: { settings: PrintSettings }) {
             />
           </Field>
           <Field label="Priority" htmlFor="priority">
-            <Select id="priority" name="priority" defaultValue="normal">
+            <Select
+              id="priority"
+              name="priority"
+              value={priority}
+              onChange={(event) => {
+                if (event.target.value === "normal" || event.target.value === "urgent") {
+                  setPriority(event.target.value);
+                }
+              }}
+            >
               <option value="normal">Normal queue</option>
-              <option value="urgent">Urgent (print desk review)</option>
+              <option value="urgent" disabled={urgentRequestsThisWeek >= 2}>
+                {urgentRequestsThisWeek >= 2
+                  ? "Urgent — weekly limit reached"
+                  : `Urgent queue — ${URGENT_PRINT_PRICE_MULTIPLIER}× price`}
+              </option>
             </Select>
+            <p className="mt-1 text-[10px] text-muted">
+              {urgentRequestsThisWeek}/2 urgent requests used this week.
+              {urgentRequestsThisWeek < 2
+                ? " Urgent requests cost 1.5× the base print price. If all three urgent slots are reserved, the job is placed first in Normal and the surcharge is removed."
+                : ""}
+            </p>
           </Field>
         </div>
 
@@ -218,6 +245,19 @@ export function PrintRequestForm({ settings }: { settings: PrintSettings }) {
                 / page
               </span>
             </div>
+            {priority === "urgent" ? (
+              <div className="flex justify-between">
+                <span>Urgent priority ({URGENT_PRINT_PRICE_MULTIPLIER}×)</span>
+                <span>
+                  +{formatCurrency(estimate - calculatePrintCost(settings, {
+                    pages: Number.isFinite(pages) ? pages : 0,
+                    copies: Number.isFinite(copies) ? copies : 0,
+                    color_mode: colorMode,
+                    sides,
+                  }))}
+                </span>
+              </div>
+            ) : null}
             <div className="flex justify-between">
               <span>Avg. processing</span>
               <span>{settings.avg_processing_minutes} min / job</span>

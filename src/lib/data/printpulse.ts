@@ -58,6 +58,75 @@ export async function updatePrintSettings(profile: Profile, input: Partial<Print
 }
 
 const ACTIVE_STATUSES: PrintStatus[] = ["submitted", "queued", "processing"];
+const WEEKLY_URGENT_PRINT_LIMIT = 2;
+const URGENT_PRINT_LANE_CAPACITY = 3;
+
+function startOfUtcWeek() {
+  const start = new Date();
+  start.setUTCHours(0, 0, 0, 0);
+  start.setUTCDate(start.getUTCDate() - ((start.getUTCDay() + 6) % 7));
+  return start.toISOString();
+}
+
+export async function getWeeklyUrgentPrintCount(profile: Profile) {
+  const weekStart = startOfUtcWeek();
+  if (isDemoMode()) {
+    return getDemoStore().print_requests.filter(
+      (request) =>
+        request.student_id === profile.id &&
+        (request.requested_priority ?? request.priority) === "urgent" &&
+        request.created_at >= weekStart,
+    ).length;
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { count, error } = await supabase
+    .from("print_requests")
+    .select("id", { count: "exact", head: true })
+    .eq("student_id", profile.id)
+    .eq("requested_priority", "urgent")
+    .gte("created_at", weekStart);
+  if (error) throw new Error(`Could not check the weekly urgent print quota: ${error.message}`);
+  return count ?? 0;
+}
+
+export function enforceDemoUrgentPrintCapacity(request: PrintRequest) {
+  const isPendingReservation = request.status === "payment_pending";
+  const isActiveJob =
+    ACTIVE_STATUSES.includes(request.status) &&
+    ["paid", "not_required"].includes(request.payment_status) &&
+    Boolean(request.file_path);
+  if (
+    request.priority !== "urgent" ||
+    (!isPendingReservation && !isActiveJob)
+  ) {
+    return false;
+  }
+
+  const activeUrgentJobs = getDemoStore().print_requests.filter(
+    (item) =>
+      item.id !== request.id &&
+      item.priority === "urgent" &&
+      (item.status === "payment_pending" ||
+        (ACTIVE_STATUSES.includes(item.status) &&
+          ["paid", "not_required"].includes(item.payment_status) &&
+          Boolean(item.file_path))),
+  ).length;
+  if (activeUrgentJobs < URGENT_PRINT_LANE_CAPACITY) return false;
+  request.priority = "normal";
+  request.priority_price_multiplier = 1;
+  request.urgent_fallback_at = new Date().toISOString();
+  return true;
+}
+
+export async function notifyUrgentPrintFallback(studentId: string, requestId: string, requestNumber: string) {
+  await notifyUsers([studentId], {
+    title: `Print request ${requestNumber} moved to the Normal queue`,
+    body: "Urgent lane is currently busy; your job has been placed at the top of the Normal queue.",
+    type: "print",
+    link: `/printpulse/${requestId}`,
+  });
+}
 
 export async function getPrintQueueInfo(profile: Profile): Promise<QueueInfo> {
   const settings = await getPrintSettings();
@@ -70,7 +139,14 @@ export async function getPrintQueueInfo(profile: Profile): Promise<QueueInfo> {
           ["paid", "not_required"].includes(request.payment_status) &&
           Boolean(request.file_path),
       )
-      .sort((a, b) => a.created_at.localeCompare(b.created_at));
+      .sort((a, b) => {
+        if (a.priority !== b.priority) return a.priority === "urgent" ? -1 : 1;
+        if (a.priority === "normal" && b.priority === "normal") {
+          const fallbackOrder = (b.urgent_fallback_at ?? "").localeCompare(a.urgent_fallback_at ?? "");
+          if (fallbackOrder !== 0) return fallbackOrder;
+        }
+        return a.created_at.localeCompare(b.created_at);
+      });
     const pending = active.filter((request) => request.status !== "processing").length;
     const processing = active.filter((request) => request.status === "processing").length;
     const mine = active.find((request) => request.student_id === profile.id);
@@ -183,6 +259,9 @@ export async function createPrintRequest(
   if (profile.role !== "student") {
     return { ok: false as const, error: "Only students can submit print requests." };
   }
+  if (input.priority === "urgent" && (await getWeeklyUrgentPrintCount(profile)) >= WEEKLY_URGENT_PRINT_LIMIT) {
+    return { ok: false as const, error: "You have used both urgent print requests for this week. Choose the normal queue to continue." };
+  }
   const settings = await getPrintSettings();
   if (input.payment_option === "cash" && !file) {
     return { ok: false as const, error: "Attach a PDF before creating a cash authorization." };
@@ -194,6 +273,17 @@ export async function createPrintRequest(
 
   if (isDemoMode()) {
     const store = getDemoStore();
+    if (
+      input.priority === "urgent" &&
+      store.print_requests.filter(
+        (request) =>
+          request.student_id === profile.id &&
+          (request.requested_priority ?? request.priority) === "urgent" &&
+          request.created_at >= startOfUtcWeek(),
+      ).length >= WEEKLY_URGENT_PRINT_LIMIT
+    ) {
+      return { ok: false as const, error: "You have used both urgent print requests for this week. Choose the normal queue to continue." };
+    }
     const request: PrintRequest = {
       id: crypto.randomUUID(),
       request_number: `PP-${1000 + store.print_requests.length + 1}`,
@@ -216,12 +306,18 @@ export async function createPrintRequest(
       payment_option: input.payment_option,
       upload_after_payment: input.payment_option !== "cash",
       priority: input.priority,
+      requested_priority: input.priority,
+      priority_price_multiplier: input.priority === "urgent" ? 1.5 : 1,
       print_mode: settings.printer_mode,
       notes: input.notes,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
     store.print_requests.unshift(request);
+    if (enforceDemoUrgentPrintCapacity(request)) {
+      request.estimated_cost = calculatePrintCost(settings, { ...input, priority: "normal" });
+      await notifyUrgentPrintFallback(request.student_id, request.id, request.request_number);
+    }
     await notifyByRoles(["admin"], {
       title: `New print request ${request.request_number}`,
       body: `${profile.full_name} · ${input.document_name} · ${input.pages} pages`,
@@ -271,11 +367,15 @@ export async function createPrintRequest(
       payment_option: input.payment_option,
       upload_after_payment: input.payment_option !== "cash",
     })
-    .select("id, request_number")
+    .select("id, request_number, priority, urgent_fallback_at, estimated_cost")
     .single();
   if (error) {
     if (path) await supabase.storage.from("print-documents").remove([path]);
     return { ok: false as const, error: error.message };
+  }
+
+  if (input.priority === "urgent" && data.priority === "normal" && data.urgent_fallback_at) {
+    await notifyUrgentPrintFallback(profile.id, data.id, data.request_number);
   }
 
   await notifyByRoles(["admin"], {
@@ -322,6 +422,9 @@ export async function attachPaidPrintFile(
     target.upload_after_payment = false;
     target.status = "submitted";
     target.updated_at = new Date().toISOString();
+    if (enforceDemoUrgentPrintCapacity(target)) {
+      await notifyUrgentPrintFallback(target.student_id, target.id, target.request_number);
+    }
     return { ok: true as const };
   }
 
@@ -350,6 +453,17 @@ export async function attachPaidPrintFile(
       ok: false as const,
       error: error?.message ?? "Payment was verified, but the file could not be attached. Try again.",
     };
+  }
+  const { data: updatedRequest, error: requestError } = await supabase
+    .from("print_requests")
+    .select("priority, urgent_fallback_at")
+    .eq("id", id)
+    .single();
+  if (requestError) {
+    return { ok: false as const, error: `PDF attached, but queue priority could not be confirmed: ${requestError.message}` };
+  }
+  if (request.priority === "urgent" && updatedRequest.priority === "normal" && updatedRequest.urgent_fallback_at) {
+    await notifyUrgentPrintFallback(profile.id, id, request.request_number);
   }
   return { ok: true as const };
 }
