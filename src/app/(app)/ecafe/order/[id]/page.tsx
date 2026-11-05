@@ -10,6 +10,7 @@ import { isDemoMode } from "@/lib/env";
 import { getPaymentMethodAvailability } from "@/lib/payments/config";
 import { RealtimeRefresh } from "@/components/realtime-refresh";
 import { QRCodeSVG } from "qrcode.react";
+import { EcafeOrderTracker } from "@/components/ecafe/ecafe-order-tracker";
 
 export const metadata = { title: "e-Cafe order" };
 
@@ -60,18 +61,29 @@ export default async function EcafeOrderPage({ params }: PageProps<"/ecafe/order
           </div>
         </div>
       </Card>
+      <EcafeOrderTracker
+        orderNumber={order.order_number}
+        status={order.status}
+        tokenNumber={order.token_number ?? null}
+      />
       {order.is_express ? (
         <p className="text-xs font-semibold text-teal-700">Express pickup lane</p>
       ) : null}
 
       {order.status === "PAYMENT_PENDING" ? (
-        <PaymentSelection
-          module="ecafe"
-          entityId={order.id}
-          amountPaise={order.amount_paise}
-          orderNumber={order.order_number}
-          availability={getPaymentMethodAvailability()}
-        />
+        <>
+          <p className="text-xs font-medium text-amber-800">
+            This order is not in the kitchen queue yet. Complete payment below to start tracking its kitchen progress.
+            Cash orders enter the queue only after cafe staff scan and verify the cash payment QR.
+          </p>
+          <PaymentSelection
+            module="ecafe"
+            entityId={order.id}
+            amountPaise={order.amount_paise}
+            orderNumber={order.order_number}
+            availability={getPaymentMethodAvailability()}
+          />
+        </>
       ) : order.status === "QUEUED" || order.status === "PREPARING" || order.status === "READY" ? (
         <Card className="p-5">
           <div className="flex flex-wrap items-start justify-between gap-4">

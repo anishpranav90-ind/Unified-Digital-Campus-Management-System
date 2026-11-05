@@ -58,7 +58,13 @@ export default async function EcafePage() {
                     <span className="block text-xs font-semibold text-ink">
                       {formatCurrency(order.amount_paise / 100)}
                     </span>
-                    <span className="block text-[10px] text-muted">{order.status.replaceAll("_", " ")}</span>
+                    <span className="block text-[10px] font-semibold text-brand-blue">
+                      {order.status === "PAYMENT_PENDING"
+                        ? "Continue payment"
+                        : ["QUEUED", "PREPARING", "READY"].includes(order.status)
+                          ? `Track token #${String(order.token_number ?? 0).padStart(3, "0")}`
+                          : order.status.replaceAll("_", " ")}
+                    </span>
                   </span>
                 </Link>
               </li>
