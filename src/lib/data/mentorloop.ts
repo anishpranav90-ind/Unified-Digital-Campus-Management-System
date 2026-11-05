@@ -1,6 +1,7 @@
 import "server-only";
 import type {
   GroupMessage,
+  MentorActivityRecord,
   MentorGroup,
   MentorGroupMember,
   Profile,
@@ -9,6 +10,7 @@ import { isDemoMode } from "@/lib/env";
 import { getDemoStore } from "@/lib/demo/store";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { notifyUsers, writeAuditLog } from "@/lib/data/helpers";
+import type { ImportedMentorActivity } from "@/lib/mentorloop/activity-csv";
 
 const ALLOWED_ATTACHMENT_TYPES = [
   "application/pdf",
@@ -205,6 +207,191 @@ export async function getMentorGroup(profile: Profile, groupId: string) {
     members: memberRows,
     messages: messageRows,
     isMentor: (group as MentorGroup).mentor_id === profile.id || profile.role === "admin",
+  };
+}
+
+export async function listMentorGroupActivities(
+  profile: Profile,
+  groupId: string,
+): Promise<MentorActivityRecord[]> {
+  if (!(await isGroupMember(profile, groupId))) return [];
+  if (isDemoMode()) return [];
+
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("mentor_group_activity_records")
+    .select("*")
+    .eq("group_id", groupId)
+    .order("occurred_at", { ascending: false })
+    .limit(500);
+  if (error) throw new Error(`Could not load group activity records: ${error.message}`);
+  return (data ?? []) as MentorActivityRecord[];
+}
+
+export async function submitMentorGroupActivity(
+  profile: Profile,
+  groupId: string,
+  input: {
+    category: MentorActivityRecord["category"];
+    activity_type: MentorActivityRecord["activity_type"];
+    title: string;
+    occurred_at: string;
+    proof_url: string | null;
+    activity_id?: string;
+  },
+) {
+  if (profile.role !== "student") {
+    return { ok: false as const, error: "Only students can submit their activity proofs." };
+  }
+  if (isDemoMode()) {
+    return { ok: false as const, error: "Activity proof submissions require the connected database." };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const values = {
+    category: input.category,
+    activity_type: input.activity_type,
+    title: input.title,
+    occurred_at: input.occurred_at,
+    proof_url: input.proof_url,
+  };
+  const query = input.activity_id
+    ? supabase
+        .from("mentor_group_activity_records")
+        .update(values)
+        .eq("id", input.activity_id)
+        .eq("group_id", groupId)
+        .eq("student_id", profile.id)
+        .eq("submitted_by", profile.id)
+        .eq("verification_status", "pending")
+    : supabase.from("mentor_group_activity_records").insert({
+        ...values,
+        group_id: groupId,
+        student_id: profile.id,
+        submitted_by: profile.id,
+        source: "Student submission",
+        source_record_id: crypto.randomUUID(),
+        imported_by: null,
+        verified_by: null,
+        verified_at: null,
+        verification_status: "pending",
+      });
+  const { data, error } = await query.select("id").maybeSingle();
+  if (error) return { ok: false as const, error: `Activity proof could not be saved: ${error.message}` };
+  if (!data) return { ok: false as const, error: "This pending proof is no longer available to edit." };
+  return { ok: true as const, id: data.id as string };
+}
+
+export async function reviewMentorGroupActivity(
+  profile: Profile,
+  groupId: string,
+  activityId: string,
+  decision: "verified" | "rejected",
+) {
+  if (profile.role !== "faculty" && profile.role !== "admin") {
+    return { ok: false as const, error: "Only the assigned mentor or an administrator can review proofs." };
+  }
+  if (isDemoMode()) {
+    return { ok: false as const, error: "Proof verification requires the connected database." };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("mentor_group_activity_records")
+    .update({
+      verification_status: decision,
+      verified_by: profile.id,
+      verified_at: new Date().toISOString(),
+    })
+    .eq("id", activityId)
+    .eq("group_id", groupId)
+    .eq("verification_status", "pending")
+    .select("id")
+    .maybeSingle();
+  if (error) return { ok: false as const, error: `Proof review failed: ${error.message}` };
+  if (!data) return { ok: false as const, error: "This proof is already reviewed or is not in your group." };
+  return { ok: true as const };
+}
+
+export async function importMentorGroupActivities(
+  profile: Profile,
+  groupId: string,
+  records: ImportedMentorActivity[],
+) {
+  if (profile.role !== "faculty" && profile.role !== "admin") {
+    return { ok: false as const, error: "Only the group mentor or an administrator can import activity records." };
+  }
+  if (isDemoMode()) {
+    return { ok: false as const, error: "Activity imports require the Supabase-backed database." };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data: group, error: groupError } = await supabase
+    .from("mentor_groups")
+    .select("mentor_id")
+    .eq("id", groupId)
+    .maybeSingle();
+  if (groupError) return { ok: false as const, error: `Could not authorize the group import: ${groupError.message}` };
+  if (!group || (profile.role !== "admin" && group.mentor_id !== profile.id)) {
+    return { ok: false as const, error: "Only this group's mentor or an administrator can import activity records." };
+  }
+
+  const { data: memberRows, error: memberError } = await supabase
+    .from("mentor_group_members")
+    .select("user_id")
+    .eq("group_id", groupId)
+    .eq("member_role", "student");
+  if (memberError) return { ok: false as const, error: `Could not validate group students: ${memberError.message}` };
+  const memberIds = (memberRows ?? []).map((member) => member.user_id);
+  const { data: studentProfiles, error: profileError } = memberIds.length
+    ? await supabase.from("profiles").select("id, email, role").in("id", memberIds)
+    : { data: [], error: null };
+  if (profileError) return { ok: false as const, error: `Could not validate group student accounts: ${profileError.message}` };
+  const students = new Map(
+    (studentProfiles ?? [])
+    .filter((student) => student.role === "student" && student.email)
+    .map((student) => [student.email.toLowerCase(), student.id]),
+  );
+  const rows = records.map((record) => {
+    const studentId = students.get(record.student_email);
+    if (!studentId) return null;
+    return {
+    student_id: studentId,
+    category: record.category,
+    activity_type: record.activity_type,
+    title: record.title,
+    source: record.source,
+    source_record_id: record.source_record_id,
+    occurred_at: record.occurred_at,
+    proof_url: record.proof_url,
+    group_id: groupId,
+    imported_by: profile.id,
+    submitted_by: null,
+    verified_by: profile.id,
+    verification_status: "verified" as const,
+    verified_at: new Date().toISOString(),
+    };
+  });
+  if (rows.some((row) => row === null)) {
+    const unknownEmail = records[rows.findIndex((row) => row === null)].student_email;
+    return {
+    ok: false as const,
+    error: `No student in this group matches ${unknownEmail}. Check the CSV email and group membership.`,
+    };
+  }
+  const insertRows = rows.filter((row): row is NonNullable<typeof row> => row !== null);
+  const { data, error } = await supabase
+    .from("mentor_group_activity_records")
+    .upsert(insertRows, {
+    onConflict: "group_id,student_id,source,source_record_id",
+      ignoreDuplicates: true,
+    })
+    .select("id");
+  if (error) return { ok: false as const, error: `Activity import failed: ${error.message}` };
+  return {
+    ok: true as const,
+    inserted: data?.length ?? 0,
+    duplicates: records.length - (data?.length ?? 0),
   };
 }
 

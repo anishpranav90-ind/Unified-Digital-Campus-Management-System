@@ -6,7 +6,7 @@ import { SubmitButton } from "@/components/ui/submit-button";
 import { loginAction } from "@/lib/actions/auth";
 import { EMPTY_FORM_STATE } from "@/lib/action-state";
 
-export function LoginForm({ demo }: { demo: boolean }) {
+export function LoginForm() {
   const [state, formAction] = useActionState(loginAction, EMPTY_FORM_STATE);
 
   return (
@@ -19,7 +19,7 @@ export function LoginForm({ demo }: { demo: boolean }) {
           type="email"
           autoComplete="email"
           placeholder="you@unisync.edu"
-          defaultValue={demo ? "student@unisync.edu" : ""}
+          defaultValue=""
           required
         />
       </Field>
@@ -30,7 +30,7 @@ export function LoginForm({ demo }: { demo: boolean }) {
           type="password"
           autoComplete="current-password"
           placeholder="••••••••"
-          defaultValue={demo ? "unisync123" : ""}
+          defaultValue=""
           required
           minLength={6}
         />

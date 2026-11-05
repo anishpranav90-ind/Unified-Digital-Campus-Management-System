@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Minus, Plus, ShoppingBag } from "lucide-react";
-import { Alert, Button, Card } from "@/components/ui";
+import { Alert, Badge, Button, Card } from "@/components/ui";
 import { createEcafeOrderAction } from "@/lib/actions/ecafe";
 import { EMPTY_FORM_STATE } from "@/lib/action-state";
 import type { EcafeMenuItem } from "@/types";
@@ -56,7 +56,10 @@ export function EcafeMenu({ menu }: { menu: EcafeMenuItem[] }) {
                       aria-label={category === "veg" ? "Vegetarian" : "Non-vegetarian"}
                     />
                     <div className="min-w-0 flex-1">
-                      <h3 className="text-sm font-semibold text-ink">{item.name}</h3>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="text-sm font-semibold text-ink">{item.name}</h3>
+                        {item.is_express ? <Badge tone="teal">Express pickup</Badge> : null}
+                      </div>
                       <p className="mt-1 min-h-8 text-xs text-muted">{item.description}</p>
                       <p className="mt-2 text-sm font-semibold text-ink">
                         {formatCurrency(item.price_paise / 100)}

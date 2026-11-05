@@ -29,7 +29,16 @@ export function RegisterForm({ departments }: { departments: Department[] }) {
       }}
     >
       {state.error ? <Alert tone="error">{state.error}</Alert> : null}
-      {state.success ? <Alert tone="success">{state.success}</Alert> : null}
+      {state.success ? (
+        <Alert tone="success">
+          <div className="space-y-2">
+            <p>{state.success}</p>
+            <Link href="/login" className="inline-block font-semibold underline">
+              Continue to sign in
+            </Link>
+          </div>
+        </Alert>
+      ) : null}
       {mismatch ? <Alert tone="error">{mismatch}</Alert> : null}
 
       <Field label="Full name" htmlFor="full_name" required>
@@ -61,8 +70,13 @@ export function RegisterForm({ departments }: { departments: Department[] }) {
           ))}
         </Select>
       </Field>
-      <Field label="College email" htmlFor="email" required>
-        <Input id="email" name="email" type="email" autoComplete="email" placeholder="you@unisync.edu" required />
+      <Field
+        label="Email address"
+        htmlFor="email"
+        hint="College, Gmail, Yahoo and other common providers are accepted."
+        required
+      >
+        <Input id="email" name="email" type="email" autoComplete="email" placeholder="you@gmail.com" required />
       </Field>
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Password" htmlFor="password" hint="8+ characters" required>

@@ -10,6 +10,11 @@ export type PaymentMethodAvailability = Record<
 export function getPaymentMethodAvailability(): PaymentMethodAvailability {
   const upiVpa = process.env.UPI_PAYEE_VPA;
   const upiConfigured = Boolean(upiVpa && /^[\w.-]+@[\w.-]+$/.test(upiVpa));
+  // Razorpay checkout is only available in Supabase-backed mode. Each half of
+  // the provider config is checked so a partial setup gives one clear reason
+  // instead of flipping availability at runtime:
+  //   RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET / RAZORPAY_WEBHOOK_SECRET + demo off
+  //   SUPABASE_SERVICE_ROLE_KEY (server-only; scripts may fall back to DB URL)
   const razorpayConfigured =
     !isDemoMode() &&
     Boolean(
@@ -27,8 +32,8 @@ export function getPaymentMethodAvailability(): PaymentMethodAvailability {
     razorpay: {
       available: razorpayConfigured,
       reason: isDemoMode()
-        ? "Razorpay checkout requires a connected Supabase project."
-        : "Razorpay settlement is not configured on the server.",
+        ? "Razorpay checkout requires a connected Supabase project and webhook settlement configuration."
+        : "Razorpay settlement is not configured on the server. Check RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET, RAZORPAY_WEBHOOK_SECRET, and SUPABASE_SERVICE_ROLE_KEY.",
     },
     cash: { available: true },
   };

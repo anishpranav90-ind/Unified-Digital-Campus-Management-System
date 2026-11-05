@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ChevronDown, LogOut, ShieldCheck, UserRound } from "lucide-react";
+import { ChevronDown, LogOut, ReceiptText, ShieldCheck, UserRound } from "lucide-react";
 import type { Profile } from "@/types";
 import { ROLE_LABEL } from "@/lib/constants";
 import { Avatar } from "@/components/ui";
@@ -55,6 +55,13 @@ export function ProfileMenu({ profile }: { profile: Profile }) {
               className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50"
             >
               <UserRound className="h-4 w-4" /> My profile
+            </Link>
+            <Link
+              href="/profile/transactions"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50"
+            >
+              <ReceiptText className="h-4 w-4" /> Transaction History
             </Link>
             {profile.role === "admin" ? (
               <Link

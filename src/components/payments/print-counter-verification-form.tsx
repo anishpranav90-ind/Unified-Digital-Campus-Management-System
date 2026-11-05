@@ -37,11 +37,11 @@ export function PrintCounterVerificationForm() {
         <Input id="counter-reference" name="reference" maxLength={80} autoComplete="off" />
       </Field>
       <Button type="submit" variant="accent" size="sm" disabled={pending || !qr}>
-        {pending ? "Verifying…" : "Verify payment and release job"}
+        {pending ? "Verifying…" : "Verify payment"}
       </Button>
       {state.success ? (
         <Button type="button" size="sm" variant="secondary" onClick={() => router.refresh()}>
-          Refresh request
+          Refresh queue
         </Button>
       ) : null}
     </form>

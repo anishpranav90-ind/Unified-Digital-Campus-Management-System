@@ -33,7 +33,7 @@ export default function PrivacyPolicyPage() {
       <Section id="data" title="What we record">
         <ul className="list-disc space-y-2 pl-5">
           <li>
-            <strong>Account details.</strong> Full name, college email address, department, semester, roll
+            <strong>Account details.</strong> Full name, email address, department, semester, roll
             number, and the optional phone number and profile photo you add. Your password is handled by
             the authentication service and is never stored in the application&apos;s own tables.
           </li>

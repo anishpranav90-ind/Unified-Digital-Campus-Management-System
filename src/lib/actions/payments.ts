@@ -52,6 +52,9 @@ export async function startPaymentAction(
   const keyId = process.env.RAZORPAY_KEY_ID;
   const keySecret = process.env.RAZORPAY_KEY_SECRET;
   const payeeVpa = process.env.UPI_PAYEE_VPA;
+  // Razorpay checkout only works server-side in Supabase-backed mode. The two
+  // checks below are intentionally separate: a partial config returns a single
+  // actionable message instead of a confusing availability flip.
   if (methodValue === "razorpay" && isDemoMode()) {
     return { error: "Razorpay checkout requires a connected Supabase project and webhook settlement configuration." };
   }
@@ -186,9 +189,10 @@ export async function verifyCounterPaymentAction(
   revalidatePath("/printpulse");
   revalidatePath("/printpulse/[id]", "page");
   revalidatePath("/ecafe");
+  revalidatePath("/ecafe/board");
   revalidatePath("/ecafe/order/[id]", "page");
   revalidatePath("/ecafe/counter");
-  return { success: "Payment verified. The order is now released to its queue." };
+  return { success: "Payment verified and released to the appropriate queue." };
 }
 
 export async function verifyRazorpayCheckoutAction(formData: FormData) {
@@ -255,6 +259,8 @@ export async function verifyRazorpayCheckoutAction(formData: FormData) {
   revalidatePath("/printpulse");
   revalidatePath("/printpulse/[id]", "page");
   revalidatePath("/ecafe");
+  revalidatePath("/ecafe/board");
   revalidatePath("/ecafe/order/[id]", "page");
-  return { success: "Payment verified and the order has been released to its queue." };
+  revalidatePath("/ecafe/counter");
+  return { success: "Payment verified and released to the appropriate queue." };
 }

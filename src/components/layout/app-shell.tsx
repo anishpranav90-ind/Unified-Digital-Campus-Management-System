@@ -13,6 +13,7 @@ import {
   Menu,
   MessagesSquare,
   Printer,
+  ScanLine,
   ShieldCheck,
   Trophy,
   Utensils,
@@ -71,6 +72,10 @@ export function AppShell({
     { href: "/notifications", label: "Notifications", icon: Bell, badge: unreadNotifications },
     { href: "/profile", label: "My profile", icon: UserRound, badge: 0 },
   ];
+  const staffLinks =
+    profile.role === "faculty" || profile.role === "admin"
+      ? [{ href: "/cashier", label: "e-Cafe cashier", icon: ScanLine, badge: 0 }]
+      : [];
   const adminLinks =
     profile.role === "admin"
       ? [
@@ -152,6 +157,16 @@ export function AppShell({
             <NavItem key={item.href} {...item} />
           ))}
         </div>
+        {staffLinks.length ? (
+          <div className="space-y-1">
+            <p className="px-3 pb-1 text-[9px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+              Cafe staff
+            </p>
+            {staffLinks.map((item) => (
+              <NavItem key={item.href} {...item} />
+            ))}
+          </div>
+        ) : null}
         {adminLinks.length ? (
           <div className="space-y-1">
             <p className="px-3 pb-1 text-[9px] font-semibold uppercase tracking-[0.18em] text-slate-500">

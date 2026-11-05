@@ -6,6 +6,24 @@ export const loginSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters."),
 });
 
+export const mfaCodeSchema = z
+  .string()
+  .trim()
+  .regex(/^\d{6}$/, "Enter the 6-digit code from your authenticator app.");
+
+export const mfaVerifySchema = z.object({
+  factorId: z.string().uuid(),
+  code: mfaCodeSchema,
+});
+
+export const mfaFactorSchema = z.object({
+  factorId: z.string().uuid(),
+});
+
+export const userMfaResetSchema = z.object({
+  user_id: z.string().uuid(),
+});
+
 export const registerSchema = z.object({
   full_name: z.string().trim().min(2, "Enter your full name.").max(80),
   email: z.string().trim().email("Enter a valid email address."),
@@ -94,6 +112,27 @@ export const groupSchema = z.object({
 
 export const messageSchema = z.object({
   body: z.string().trim().min(1, "Write a message.").max(2000),
+});
+
+export const mentorActivitySubmissionSchema = z.object({
+  group_id: z.string().uuid(),
+  activity_id: z.string().uuid().optional().or(z.literal("")),
+  category: z.enum(["tech", "research", "culturals", "sports"]),
+  activity_type: z.enum([
+    "google_form_submission",
+    "hackathon_registration",
+    "paper_publication",
+    "other",
+  ]),
+  title: z.string().trim().min(2, "Add an activity title.").max(200),
+  occurred_at: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Choose a valid activity date."),
+  proof_url: z.string().trim().max(2000).optional().or(z.literal("")),
+});
+
+export const mentorActivityReviewSchema = z.object({
+  group_id: z.string().uuid(),
+  activity_id: z.string().uuid(),
+  decision: z.enum(["verified", "rejected"]),
 });
 
 export const opportunitySchema = z.object({

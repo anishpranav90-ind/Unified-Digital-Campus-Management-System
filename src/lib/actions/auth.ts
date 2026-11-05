@@ -3,7 +3,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { isDemoMode } from "@/lib/env";
+import { APP_URL, isDemoMode } from "@/lib/env";
 import { DEMO_COOKIE } from "@/lib/demo/constants";
 import { DEMO_PASSWORD, demoProfileByEmail, getDemoStore } from "@/lib/demo/store";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -33,7 +33,7 @@ export async function loginAction(_prev: AuthState, formData: FormData): Promise
     const profile = demoProfileByEmail(parsed.data.email);
     const expected = profile?.password || DEMO_PASSWORD;
     if (!profile || parsed.data.password !== expected) {
-      return { error: "Invalid demo email or password. Use the demo account buttons below." };
+      return { error: "Invalid email or password. Use one of the three accounts shown above." };
     }
     const cookieStore = await cookies();
     cookieStore.set(DEMO_COOKIE, profile.id, COOKIE_OPTIONS);
@@ -42,7 +42,14 @@ export async function loginAction(_prev: AuthState, formData: FormData): Promise
 
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.auth.signInWithPassword(parsed.data);
-  if (error) return { error: error.message };
+  if (error) {
+    if (error.message.toLowerCase().includes("email not confirmed")) {
+      return {
+        error: "Confirm your email using the link sent after registration, then sign in with the same account.",
+      };
+    }
+    return { error: error.message };
+  }
   redirect("/dashboard");
 }
 
@@ -100,24 +107,53 @@ export async function registerAction(_prev: AuthState, formData: FormData): Prom
   }
 
   const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase.auth.signUp({
-    email: parsed.data.email,
-    password: parsed.data.password,
-    options: {
-      data: {
-        full_name: parsed.data.full_name,
-        roll_number: parsed.data.roll_number || null,
-        department_id: parsed.data.department_id || null,
-        semester: parsed.data.semester ?? null,
+  let hasSession = false;
+  let identityCount: number | undefined;
+  try {
+    const result = await supabase.auth.signUp({
+      email: parsed.data.email,
+      password: parsed.data.password,
+      options: {
+        emailRedirectTo: new URL("/auth/callback", APP_URL).toString(),
+        data: {
+          full_name: parsed.data.full_name,
+          roll_number: parsed.data.roll_number || null,
+          department_id: parsed.data.department_id || null,
+          semester: parsed.data.semester ?? null,
+        },
       },
-    },
-  });
+    });
+    const { error } = result;
 
-  if (error) return { error: error.message };
-  if (!data.session) {
+    if (error) {
+      if (error.status === 504 || /gateway timeout/i.test(error.message)) {
+        return {
+          error:
+            "Supabase timed out while creating the account. It may still have been created—try signing in with this email and password before registering again. If sign-in also fails, check Supabase Auth email/SMTP settings.",
+        };
+      }
+      return { error: error.message };
+    }
+    hasSession = Boolean(result.data.session);
+    identityCount = result.data.user?.identities?.length;
+  } catch (error) {
+    if (error instanceof Error) {
+      return {
+        error:
+          "Could not reach Supabase Auth to finish registration. Check your connection and Supabase Auth status, then try signing in before retrying registration.",
+      };
+    }
+    throw error;
+  }
+
+  if (identityCount === 0) {
     return {
-      success:
-        "Account created. Check your email for the confirmation link, then sign in. (For instant demos, disable email confirmation in Supabase Auth settings.)",
+      error: "This email may already have an account. Try signing in or use the password reset option.",
+    };
+  }
+  if (!hasSession) {
+    return {
+      success: "Account created. Check your inbox and confirm your email before signing in with this same email and password.",
     };
   }
   redirect("/dashboard");

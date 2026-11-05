@@ -512,6 +512,8 @@ function seed(): DemoStore {
     { id: "egg-roll", name: "Egg Roll", category: "non_veg", description: "Egg, vegetables and house sauce in a roll.", price_paise: 7500, available: true },
     { id: "chicken-biryani", name: "Chicken Biryani", category: "non_veg", description: "Chicken dum biryani with raita.", price_paise: 15000, available: true },
     { id: "egg-fried-rice", name: "Egg Fried Rice", category: "non_veg", description: "Wok-fried rice with egg and vegetables.", price_paise: 9500, available: true },
+    { id: "bottled-water", name: "Bottled Water", category: "veg", description: "Chilled bottled drinking water.", price_paise: 2000, available: true, is_express: true },
+    { id: "packaged-snack", name: "Packaged Snack", category: "veg", description: "Ready-to-serve packaged snack.", price_paise: 3000, available: true, is_express: true },
   ];
 
   const mentor_groups: MentorGroup[] = [

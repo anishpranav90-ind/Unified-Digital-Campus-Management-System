@@ -7,6 +7,7 @@ import { isDemoMode } from "@/lib/env";
 import { DEMO_COOKIE } from "@/lib/demo/constants";
 import { demoProfileById, getDemoStore } from "@/lib/demo/store";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { isInstitutionalEmail } from "@/lib/auth/institutional-email";
 
 export { DEMO_COOKIE };
 
@@ -35,6 +36,7 @@ export async function getCurrentProfile(): Promise<Profile | null> {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return null;
+  if (!isInstitutionalEmail(user.email ?? "")) return null;
 
   const { data } = await supabase
     .from("profiles")

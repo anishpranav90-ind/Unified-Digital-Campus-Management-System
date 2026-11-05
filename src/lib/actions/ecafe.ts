@@ -3,13 +3,23 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireProfile } from "@/lib/session";
-import { createEcafeOrder } from "@/lib/data/ecafe";
+import {
+  createEcafeOrder,
+  redeemEcafePickup,
+  updateEcafeOrderStatus,
+  type EcafePickupResult,
+} from "@/lib/data/ecafe";
 import { ecafeCartSchema } from "@/lib/validations";
 import type { Profile } from "@/types";
 
 export type EcafeOrderActionState = {
   error?: string;
   orderId?: string;
+};
+
+export type EcafePickupActionState = {
+  error?: string;
+  result?: EcafePickupResult;
 };
 
 export async function createEcafeOrderAction(
@@ -32,18 +42,50 @@ export async function createEcafeOrderAction(
   return { orderId: result.id };
 }
 
-export async function completeEcafeOrderAction(formData: FormData) {
+export async function updateEcafeOrderStatusAction(formData: FormData) {
   const profile = await requireProfile();
   if (profile.role !== "faculty" && profile.role !== "admin") {
     redirect("/ecafe/counter?error=Unauthorized");
   }
   const orderId = String(formData.get("order_id") ?? "");
   if (!/^[\da-f-]{36}$/i.test(orderId)) redirect("/ecafe/counter?error=Invalid+order");
-  const { completeEcafeOrder } = await import("@/lib/data/ecafe");
-  const result = await completeEcafeOrder(profile, orderId);
+  const status = String(formData.get("status") ?? "");
+  if (status !== "PREPARING" && status !== "READY") {
+    redirect("/ecafe/counter?error=Invalid+order+status");
+  }
+  const result = await updateEcafeOrderStatus(profile, orderId, status);
   if (!result.ok) redirect(`/ecafe/counter?error=${encodeURIComponent(result.error)}`);
   revalidatePath("/ecafe");
+  revalidatePath("/ecafe/board");
   revalidatePath("/ecafe/counter");
   revalidatePath(`/ecafe/order/${orderId}`);
-  redirect("/ecafe/counter?completed=1");
+  redirect(`/ecafe/counter?updated=${status.toLowerCase()}`);
+}
+
+export async function redeemEcafePickupAction(
+  _previous: EcafePickupActionState,
+  formData: FormData,
+): Promise<EcafePickupActionState> {
+  const profile = await requireProfile();
+  if (profile.role !== "faculty" && profile.role !== "admin") {
+    return { error: "Only authorized cafe counter staff can scan pickup QR codes." };
+  }
+  const rawQr = String(formData.get("qr") ?? "").trim();
+  const match = /^unisync-ecafe-pickup:\/\/([0-9a-f]{64})$/i.exec(rawQr);
+  if (!match) return { error: "Scan or enter a valid e-Cafe pickup QR code." };
+
+  const result = await redeemEcafePickup(profile, match[1].toLowerCase());
+  if (!result.found) return { error: "Pickup QR not recognized. Ask the student to open their order." };
+  if (!result.completed) {
+    return {
+      error: `Order not ready yet! Current queue position: ${result.queue_position ?? 0}.`,
+      result,
+    };
+  }
+
+  revalidatePath("/ecafe");
+  revalidatePath("/ecafe/board");
+  revalidatePath("/ecafe/counter");
+  if (result.order_number) revalidatePath("/ecafe/order/[id]", "page");
+  return { result };
 }

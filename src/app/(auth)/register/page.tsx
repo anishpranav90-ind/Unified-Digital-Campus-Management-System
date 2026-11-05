@@ -29,7 +29,13 @@ export default async function RegisterPage() {
           <strong>Demo mode.</strong> Accounts you create are stored in server memory until restart. Real
           deployments use Supabase Auth and a database trigger creates the matching profile.
         </Alert>
-      ) : null}
+      ) : (
+        <Alert tone="info" className="mb-5">
+          <strong>Live account creation.</strong> Enter your own details. Your account is saved in
+          Supabase; if email confirmation is enabled, confirm the link we send before signing in.
+          Later, use the same email and password on the sign-in page.
+        </Alert>
+      )}
 
       <RegisterForm departments={departments} />
 

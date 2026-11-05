@@ -13,6 +13,8 @@
     "test:routes": "node scripts/smoke-routes.mjs",
     "test:details": "node scripts/smoke-details.mjs",
     "test:razorpay-webhook": "node --test scripts/test-razorpay-webhook.mjs",
+    "test:mentorloop-activity": "node --test scripts/test-mentorloop-activity-csv.mjs scripts/test-mentorloop-security.mjs",
+    "mfa:reset": "node --env-file=.env.local scripts/reset-mfa.mjs",
     "reminders": "node --env-file=.env.local scripts/deadline-reminders.mjs"
   },
   "dependencies": {

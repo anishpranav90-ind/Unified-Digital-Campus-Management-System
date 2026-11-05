@@ -1,5 +1,12 @@
 import "server-only";
-import type { EcafeMenuItem, EcafeOrder, EcafeOrderInput, Profile } from "@/types";
+import { randomBytes } from "node:crypto";
+import type {
+  EcafeMenuItem,
+  EcafeOrder,
+  EcafeOrderInput,
+  EcafeQueueBoardEntry,
+  Profile,
+} from "@/types";
 import { getDemoStore } from "@/lib/demo/store";
 import { isDemoMode } from "@/lib/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -11,7 +18,7 @@ export async function listEcafeMenu(): Promise<EcafeMenuItem[]> {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from("ecafe_menu_items")
-    .select("id, name, category, description, price_paise, available")
+    .select("id, name, category, description, price_paise, available, is_express")
     .eq("available", true)
     .order("sort_order");
   if (error) throw new Error(`Could not load the e-Cafe menu: ${error.message}`);
@@ -49,6 +56,11 @@ export async function createEcafeOrder(profile: Profile, input: EcafeOrderInput[
       items: verifiedItems,
       amount_paise,
       status: "PAYMENT_PENDING",
+      is_express: verifiedItems.every((item) =>
+        store.ecafe_menu_items.find((menuItem) => menuItem.id === item.id)?.is_express === true,
+      ),
+      payment_method: null,
+      pickup_token: null,
       created_at: now,
       updated_at: now,
     };
@@ -93,33 +105,188 @@ export async function listEcafeOrders(profile: Profile): Promise<EcafeOrder[]> {
     return (data ?? []) as EcafeOrder[];
   }
 
-  if (isDemoMode()) return getDemoStore().ecafe_orders;
+  if (isDemoMode()) {
+    return getDemoStore().ecafe_orders
+      .filter((order) => ["QUEUED", "PREPARING", "READY"].includes(order.status))
+      .sort((a, b) => {
+        const dateOrder = (a.service_date ?? "").localeCompare(b.service_date ?? "");
+        return dateOrder || (a.token_number ?? 0) - (b.token_number ?? 0);
+      });
+  }
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from("ecafe_orders")
     .select("*")
-    .in("status", ["VERIFIED_AND_QUEUED", "COMPLETED"])
-    .order("created_at", { ascending: true })
+    .in("status", ["QUEUED", "PREPARING", "READY"])
+    .order("service_date", { ascending: true })
+    .order("token_number", { ascending: true })
     .limit(100);
   if (error) throw new Error(`Could not load the kitchen queue: ${error.message}`);
   return (data ?? []) as EcafeOrder[];
 }
 
-export async function completeEcafeOrder(profile: Profile, orderId: string) {
+function currentCafeDate() {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Kolkata",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+}
+
+export async function listEcafeQueueBoard(): Promise<EcafeQueueBoardEntry[]> {
+  const serviceDate = currentCafeDate();
+  if (isDemoMode()) {
+    return getDemoStore().ecafe_orders
+      .filter(
+        (order) =>
+          order.service_date === serviceDate &&
+          order.token_number &&
+          ["QUEUED", "PREPARING", "READY"].includes(order.status),
+      )
+      .map((order) => ({
+        service_date: serviceDate,
+        token_number: order.token_number!,
+        is_express: order.is_express === true,
+        status: order.status as "QUEUED" | "PREPARING" | "READY",
+      }))
+      .sort((a, b) => a.token_number - b.token_number);
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("ecafe_queue_board")
+    .select("service_date, token_number, is_express, status")
+    .eq("service_date", serviceDate)
+    .order("token_number", { ascending: true });
+  if (error) throw new Error(`Could not load the e-Cafe token board: ${error.message}`);
+  return (data ?? []) as EcafeQueueBoardEntry[];
+}
+
+export async function updateEcafeOrderStatus(
+  profile: Profile,
+  orderId: string,
+  status: "PREPARING" | "READY",
+) {
   if (profile.role !== "faculty" && profile.role !== "admin") {
-    return { ok: false as const, error: "Only cafe counter staff can complete orders." };
+    return { ok: false as const, error: "Only cafe staff can update kitchen orders." };
   }
   if (isDemoMode()) {
     const order = getDemoStore().ecafe_orders.find((item) => item.id === orderId);
-    if (!order || order.status !== "VERIFIED_AND_QUEUED") {
-      return { ok: false as const, error: "Only verified orders can be completed." };
+    if (!order || (status === "PREPARING" && order.status !== "QUEUED") ||
+      (status === "READY" && order.status !== "PREPARING")) {
+      return { ok: false as const, error: "Order status changed; refresh the kitchen queue and try again." };
     }
-    order.status = "COMPLETED";
+    const now = new Date().toISOString();
+    order.status = status;
     order.updated_at = new Date().toISOString();
-    return { ok: true as const };
+    if (status === "PREPARING") order.preparing_at = now;
+    if (status === "READY") {
+      order.ready_at = now;
+      order.pickup_token = randomBytes(32).toString("hex");
+    }
+    return { ok: true as const, pickupToken: order.pickup_token ?? null };
   }
   const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase.rpc("complete_ecafe_order", { p_order_id: orderId });
+  const { data, error } = await supabase.rpc("update_ecafe_order_status", {
+    p_order_id: orderId,
+    p_status: status,
+  });
   if (error) return { ok: false as const, error: error.message };
-  return data ? { ok: true as const } : { ok: false as const, error: "Only verified orders can be completed." };
+  return { ok: true as const, pickupToken: typeof data === "string" ? data : null };
+}
+
+export interface EcafePickupResult {
+  found: boolean;
+  completed: boolean;
+  order_status: string;
+  order_number: string | null;
+  token_number: number | null;
+  queue_position: number | null;
+  items: EcafeOrder["items"] | null;
+}
+
+export async function redeemEcafePickup(profile: Profile, pickupToken: string): Promise<EcafePickupResult> {
+  if (profile.role !== "faculty" && profile.role !== "admin") {
+    throw new Error("Only authorized cafe counter staff can redeem pickup QR codes.");
+  }
+  if (!/^[\da-f]{64}$/.test(pickupToken)) {
+    return {
+      found: false,
+      completed: false,
+      order_status: "NOT_FOUND",
+      order_number: null,
+      token_number: null,
+      queue_position: null,
+      items: null,
+    };
+  }
+
+  if (isDemoMode()) {
+    const store = getDemoStore();
+    const order = store.ecafe_orders.find((item) => item.pickup_token === pickupToken);
+    if (!order) {
+      return {
+        found: false,
+        completed: false,
+        order_status: "NOT_FOUND",
+        order_number: null,
+        token_number: null,
+        queue_position: null,
+        items: null,
+      };
+    }
+    if (order.status === "READY") {
+      order.status = "COMPLETED";
+      order.pickup_token = null;
+      order.completed_at = new Date().toISOString();
+      order.updated_at = order.completed_at;
+      return {
+        found: true,
+        completed: true,
+        order_status: "COMPLETED",
+        order_number: order.order_number,
+        token_number: order.token_number ?? null,
+        queue_position: 0,
+        items: order.items,
+      };
+    }
+    const queuePosition = ["QUEUED", "PREPARING"].includes(order.status)
+      ? store.ecafe_orders.filter(
+          (item) =>
+            item.service_date === order.service_date &&
+            item.is_express === order.is_express &&
+            (item.token_number ?? Number.MAX_SAFE_INTEGER) <= (order.token_number ?? 0) &&
+            ["QUEUED", "PREPARING"].includes(item.status),
+        ).length
+      : 0;
+    return {
+      found: true,
+      completed: false,
+      order_status: order.status,
+      order_number: order.order_number,
+      token_number: order.token_number ?? null,
+      queue_position: queuePosition,
+      items: order.items,
+    };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase.rpc("redeem_ecafe_pickup", {
+    p_pickup_token: pickupToken,
+  });
+  if (error) throw new Error(`Could not verify the pickup QR: ${error.message}`);
+  const result = Array.isArray(data) ? data[0] : data;
+  if (!result) {
+    return {
+      found: false,
+      completed: false,
+      order_status: "NOT_FOUND",
+      order_number: null,
+      token_number: null,
+      queue_position: null,
+      items: null,
+    };
+  }
+  return result as EcafePickupResult;
 }

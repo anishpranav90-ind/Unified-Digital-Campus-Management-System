@@ -1,6 +1,6 @@
 import "server-only";
 import { createHash } from "node:crypto";
-import type { PaymentMethod, PaymentTransaction, Profile } from "@/types";
+import type { EcafeOrderItem, PaymentMethod, PaymentTransaction, Profile } from "@/types";
 import { getDemoStore } from "@/lib/demo/store";
 import { isDemoMode } from "@/lib/env";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -8,6 +8,119 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export function hashCounterToken(token: string) {
   return createHash("sha256").update(token).digest("hex");
+}
+
+export interface PendingCashEcafeOrder {
+  order_number: string;
+  items: EcafeOrderItem[];
+  amount_paise: number;
+}
+
+function currentCafeDate() {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Kolkata",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+}
+
+export async function getPendingCashEcafeOrder(
+  profile: Profile,
+  transactionId: string,
+  tokenHash: string,
+): Promise<PendingCashEcafeOrder | null> {
+  if (profile.role !== "faculty" && profile.role !== "admin") {
+    return null;
+  }
+
+  if (isDemoMode()) {
+    const store = getDemoStore();
+    const transaction = store.payment_transactions.find(
+      (item) =>
+        item.id === transactionId &&
+        item.module === "ecafe" &&
+        item.method === "cash" &&
+        item.status === "pending" &&
+        item.counter_token_hash === tokenHash,
+    );
+    if (!transaction?.ecafe_order_id) return null;
+    const order = store.ecafe_orders.find((item) => item.id === transaction.ecafe_order_id);
+    if (
+      !order ||
+      order.user_id !== transaction.user_id ||
+      order.status !== "PAYMENT_PENDING" ||
+      order.amount_paise !== transaction.amount_paise
+    ) {
+      return null;
+    }
+    return {
+      order_number: order.order_number,
+      items: order.items,
+      amount_paise: order.amount_paise,
+    };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data: transaction, error: transactionError } = await supabase
+    .from("payment_transactions")
+    .select("id, user_id, module, ecafe_order_id, amount_paise, method, status, counter_token_hash")
+    .eq("id", transactionId)
+    .maybeSingle();
+  if (transactionError) {
+    throw new Error(`Could not verify the cashier QR: ${transactionError.message}`);
+  }
+  if (
+    !transaction ||
+    transaction.module !== "ecafe" ||
+    transaction.method !== "cash" ||
+    transaction.status !== "pending" ||
+    transaction.counter_token_hash !== tokenHash ||
+    !transaction.ecafe_order_id
+  ) {
+    return null;
+  }
+
+  const { data: order, error: orderError } = await supabase
+    .from("ecafe_orders")
+    .select("order_number, user_id, items, amount_paise, status")
+    .eq("id", transaction.ecafe_order_id)
+    .maybeSingle();
+  if (orderError) {
+    throw new Error(`Could not load the pending cafe order: ${orderError.message}`);
+  }
+  if (
+    !order ||
+    order.user_id !== transaction.user_id ||
+    order.status !== "PAYMENT_PENDING" ||
+    Number(order.amount_paise) !== Number(transaction.amount_paise)
+  ) {
+    return null;
+  }
+
+  return {
+    order_number: order.order_number,
+    items: order.items as EcafeOrderItem[],
+    amount_paise: Number(order.amount_paise),
+  };
+}
+
+function enqueueDemoEcafeOrder(
+  store: ReturnType<typeof getDemoStore>,
+  order: ReturnType<typeof getDemoStore>["ecafe_orders"][number],
+  method: PaymentMethod,
+) {
+  const serviceDate = currentCafeDate();
+  const latestToken = store.ecafe_orders.reduce(
+    (max, queued) => queued.service_date === serviceDate ? Math.max(max, queued.token_number ?? 0) : max,
+    0,
+  );
+  order.service_date = serviceDate;
+  order.token_number = latestToken + 1;
+  order.status = "QUEUED";
+  order.payment_method = method;
+  order.pickup_token = null;
+  order.updated_at = new Date().toISOString();
 }
 
 export async function startPaymentTransaction(
@@ -250,8 +363,7 @@ export async function verifyCounterPayment(
       if (!order || order.status !== "PAYMENT_PENDING" || order.amount_paise !== transaction.amount_paise) {
         return { ok: false as const, error: "The cafe order amount or state has changed." };
       }
-      order.status = "VERIFIED_AND_QUEUED";
-      order.updated_at = new Date().toISOString();
+      enqueueDemoEcafeOrder(store, order, method);
     }
     transaction.status = "verified";
     transaction.payment_reference = reference?.trim() || null;

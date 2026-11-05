@@ -177,6 +177,7 @@ export interface EcafeMenuItem {
   description: string;
   price_paise: number;
   available: boolean;
+  is_express?: boolean;
 }
 
 export interface EcafeOrderItem extends Pick<EcafeMenuItem, "id" | "name" | "category"> {
@@ -187,6 +188,9 @@ export interface EcafeOrderItem extends Pick<EcafeMenuItem, "id" | "name" | "cat
 export type EcafeOrderStatus =
   | "DRAFT"
   | "PAYMENT_PENDING"
+  | "QUEUED"
+  | "PREPARING"
+  | "READY"
   | "VERIFIED_AND_QUEUED"
   | "COMPLETED"
   | "CANCELLED";
@@ -198,8 +202,23 @@ export interface EcafeOrder {
   items: EcafeOrderItem[];
   amount_paise: number;
   status: EcafeOrderStatus;
+  service_date?: string | null;
+  token_number?: number | null;
+  is_express?: boolean;
+  payment_method?: PaymentMethod | null;
+  pickup_token?: string | null;
+  preparing_at?: string | null;
+  ready_at?: string | null;
+  completed_at?: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface EcafeQueueBoardEntry {
+  service_date: string;
+  token_number: number;
+  is_express: boolean;
+  status: "QUEUED" | "PREPARING" | "READY";
 }
 
 export interface EcafeOrderInput {
@@ -225,6 +244,35 @@ export interface PaymentTransaction {
   payment_reference: string | null;
   created_at: string;
   verified_at: string | null;
+}
+
+export interface EcafeTransactionDetails {
+  token_number: number | null;
+  items: EcafeOrderItem[];
+  is_express: boolean;
+}
+
+export interface PrintTransactionDetails {
+  document_name: string;
+  pages: number;
+  paper_size: "a4" | "a3" | "letter";
+  page_range: string | null;
+  copies: number;
+  color_mode: "bw" | "color";
+  sides: "single" | "double";
+  payment_status: PrintRequest["payment_status"];
+  file_size: number | null;
+}
+
+export interface TransactionHistoryRecord {
+  type: "ecafe" | "printpulse";
+  id: string;
+  reference: string;
+  created_at: string;
+  status: string;
+  payment_method: string | null;
+  amount_paise: number;
+  details: EcafeTransactionDetails | PrintTransactionDetails;
 }
 
 export interface MentorGroup {
@@ -258,6 +306,32 @@ export interface GroupMessage {
   created_at: string;
   sender?: Pick<Profile, "id" | "full_name" | "role"> | null;
   attachments?: MessageAttachment[];
+}
+
+export type MentorActivityCategory = "tech" | "research" | "culturals" | "sports";
+export type MentorActivityType =
+  | "google_form_submission"
+  | "hackathon_registration"
+  | "paper_publication"
+  | "other";
+
+export interface MentorActivityRecord {
+  id: string;
+  group_id: string;
+  student_id: string;
+  category: MentorActivityCategory;
+  activity_type: MentorActivityType;
+  title: string;
+  source: string;
+  source_record_id: string;
+  occurred_at: string;
+  proof_url: string | null;
+  imported_by: string | null;
+  submitted_by: string | null;
+  verified_by: string | null;
+  verification_status: "pending" | "verified" | "rejected";
+  imported_at: string;
+  verified_at: string;
 }
 
 export interface MessageAttachment {

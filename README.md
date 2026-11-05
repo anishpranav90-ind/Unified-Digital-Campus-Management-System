@@ -2,17 +2,34 @@
 
 A unified campus operations platform for print jobs, timetables, mentor groups, opportunities, maintenance complaints and administrator oversight. Built with Next.js 16 (App Router), TypeScript, Tailwind CSS 4 and Supabase (PostgreSQL, Auth, Storage, Realtime).
 
-The five modules:
+The six modules:
 
 | Module | What it does |
 |---|---|
 | **PrintPulse** | PDF upload, DB-authoritative pricing, live queue position, estimated wait and staff-managed statuses |
 | **TimeGrid** | Weekly timetable grid, exam schedule, correction requests and conflict-safe admin editing |
-| **MentorLoop** | Mentor groups, membership controls, realtime group chat and read receipts |
+| **MentorLoop** | Mentor groups, membership controls, realtime group chat, read receipts and staff-imported verified activity profiles |
 | **Opportune** | Interest-aware opportunity discovery, bookmarks, staff publishing and safe external apply links |
 | **Fixora** | Maintenance reporting, status history, comments, priority and assignment workflow |
+| **e-Cafe** | Payment-gated kitchen queue, daily tokens, express pickup lane and ready-only QR redemption |
 
 Plus a unified dashboard for every role, notifications, global search, an administrator console with role management and an append-only audit trail, and public privacy and terms pages.
+
+---
+
+## MentorLoop verified activity imports
+
+The group Activity Tracker accepts student proof submissions and staff-generated CSV exports; it does not connect directly to Google Forms, hackathon platforms, or publication databases. Students can create and edit only their own pending records. The assigned group mentor can verify/reject submissions and import source exports. The group roster is validated by student email, imports are attributed to the staff member, and duplicate source IDs for the same student are skipped. RLS limits activity reads to the assigned mentor/admin or the student concerned. Mentor review controls and inserts are guarded by RLS and database triggers. Activity inserts/updates are in the `supabase_realtime` publication and the mentor client subscribes to group-filtered Postgres changes; student rows remain protected by RLS.
+
+Apply `20261105000100_mentorloop_verified_activity.sql` before using this feature. Download the CSV template from the group Activity Tracker. Headers, in order:
+
+```csv
+student_email,category,activity_type,title,source,source_record_id,occurred_at,proof_url
+```
+
+`category` must be `tech`, `research`, `culturals`, or `sports`. `activity_type` must be `google_form_submission`, `hackathon_registration`, `paper_publication`, or `other`. `occurred_at` should be an ISO-8601 timestamp; `proof_url` is optional and must use HTTPS. Imports are limited to 500 records and 1 MB per file.
+
+Apply `20261105000200_mentorloop_live_proofs_rbac.sql` to enable student submissions, mentor verification, Realtime publication, and the database email-domain guard. Real Supabase sign-in and registration accept `college.edu.in` plus common providers (Gmail, Googlemail, Yahoo, Yahoo India, Ymail, Outlook, Hotmail, Live, iCloud, Rediffmail, Protonmail, Proton and Zoho) by default. Keep `INSTITUTIONAL_EMAIL_DOMAINS` in the server environment synchronized with `public.institutional_email_domains` if the allowlist changes. Demo-mode accounts are local-only and are not accepted by real Supabase authentication. Configure the Supabase Auth access-token/JWT expiry (recommended: 1 hour) in the Supabase project settings; the SSR auth cookie has an eight-hour sliding lifetime. The Supabase browser client must access its session cookie to authenticate Realtime WebSockets, so it is `Secure` in production and `SameSite=Lax`, but not `HttpOnly`.
 
 ---
 
@@ -84,6 +101,11 @@ The payment workflow adds:
 
 7. `supabase/migrations/20261104000400_guarded_payments_ecafe.sql` — guarded PrintPulse/e-Cafe payment records and queue state
 8. `supabase/migrations/20261104000500_razorpay_webhook_idempotency.sql` — Razorpay payment attempts, event idempotency, and atomic settlement
+9. `supabase/migrations/20261105000100_mentorloop_verified_activity.sql` — MentorLoop verified activity records and staff imports
+10. `supabase/migrations/20261105000200_mentorloop_live_proofs_rbac.sql` — student submissions, mentor verification, email-domain guard, and Realtime publication
+11. `supabase/migrations/20261105000300_allow_consumer_email_domains.sql` — adds Gmail, Yahoo and other common providers to the sign-in allowlist
+12. `supabase/migrations/20261105000400_ecafe_priority_queue.sql` — assigns daily tokens after verified payment, enables express/FIFO kitchen lanes, pickup QR redemption, and the Realtime token board
+13. `supabase/migrations/20261105000500_transaction_history.sql` — adds the owner-scoped, paginated PrintPulse/e-Cafe transaction history query
 
 Then apply the reference data (already included in `npm run db:apply`):
 
@@ -93,6 +115,14 @@ supabase/seed.sql
 ```
 
 The reference seed inserts departments and default print pricing. It is safe to run more than once.
+
+### e-Cafe priority queue
+
+Apply `20261105000400_ecafe_priority_queue.sql` after the guarded payments migrations. Cash orders stay in `PAYMENT_PENDING` and are excluded from the kitchen until a staff member verifies the cashier QR. A verified payment receives the next daily token atomically; Razorpay enters the queue only after the server-side settlement flow verifies the payment. Direct UPI intent is not a payment webhook and still requires counter verification against the bank reference.
+
+Cafe staff use `/cashier` to scan a pending cash QR, review its item breakdown and exact amount, and confirm cash receipt. Confirmation reuses the guarded settlement flow and sends the order to `QUEUED`; unpaid orders remain hidden from the kitchen. Staff use `/ecafe/counter` to verify direct UPI receipts and move paid orders through `QUEUED → PREPARING → READY`; the pickup QR is available only in `READY`. Counter redemption changes a ready order to `COMPLETED`, while early scans return the order's position in its FIFO lane. `/ecafe/board` displays the live queue with separate express and standard lanes. The board contains only token numbers and statuses; its table has read-only authenticated access and is published through Supabase Realtime. Student order pages and the kitchen board receive the corresponding Realtime updates. Demo mode simulates updates with polling.
+
+Users can open **Transaction History** from the profile dropdown at `/profile/transactions`. The page combines the signed-in user's PrintPulse jobs and e-Cafe orders, with category, search, date-range, and paginated filters. Its `/api/profile/transactions` endpoint uses the `list_my_transaction_history` database function, which is restricted to the caller's own records.
 
 ### 3. Seed the full demo dataset (optional)
 
@@ -149,6 +179,7 @@ Demo mode turns off automatically once both Supabase keys are present. Set `NEXT
 | `RAZORPAY_KEY_SECRET` | Razorpay Checkout | Server-side API secret; never expose to the client |
 | `RAZORPAY_WEBHOOK_SECRET` | Razorpay webhooks | Secret configured for the Razorpay webhook endpoint; server-side only |
 | `NEXT_PUBLIC_DEMO_MODE` | No | `true` forces demo, `false` requires Supabase, blank auto-detects |
+| `INSTITUTIONAL_EMAIL_DOMAINS` | Supabase Auth | Comma-separated exact domains allowed for login and registration. Defaults to the campus domain plus Gmail, Yahoo, Outlook, Hotmail, iCloud, Live, Rediffmail, Proton and Zoho; keep synchronized with the database allowlist |
 | `DEMO_PASSWORD` | No | Demo account password (default `unisync123`) |
 | `CUPS_SJIT_GIRLS_XEROX_1_URI` | CUPS only | Server-side IPP/IPPS URI for SJIT Girls Xerox-1 |
 | `CUPS_SJIT_BOYS_XEROX_1_URI` | CUPS only | Server-side IPP/IPPS URI for SJIT-Boys Xerox-1 |

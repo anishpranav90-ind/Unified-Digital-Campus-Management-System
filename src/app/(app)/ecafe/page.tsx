@@ -17,13 +17,23 @@ export default async function EcafePage() {
       <PageHeader
         eyebrow="Campus dining"
         title="e-Cafe"
-        description="Today's menu: choose vegetarian or non-vegetarian favourites, set quantities, and check out securely."
+        description="Choose from today's menu, pay securely, and track your kitchen token live. Unpaid cash orders are not sent to the kitchen."
         actions={
-          profile.role === "faculty" || profile.role === "admin" ? (
-            <Link href="/ecafe/counter" className="text-xs font-semibold text-brand-blue hover:underline">
-              Open counter queue
+          <div className="flex flex-wrap gap-3">
+            <Link href="/ecafe/board" className="text-xs font-semibold text-brand-blue hover:underline">
+              Live token board
             </Link>
-          ) : null
+            {profile.role === "faculty" || profile.role === "admin" ? (
+              <>
+                <Link href="/cashier" className="text-xs font-semibold text-brand-blue hover:underline">
+                  Cashier verification
+                </Link>
+                <Link href="/ecafe/counter" className="text-xs font-semibold text-brand-blue hover:underline">
+                  Staff kitchen & pickup
+                </Link>
+              </>
+            ) : null}
+          </div>
         }
       />
 
